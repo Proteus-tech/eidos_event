@@ -24,14 +24,14 @@ class TestEvent(TestCase):
         self.assertEqual(event.get_absolute_url(), reverse('event', kwargs={'id': event.id}))
 
     def test_save(self):
-#        patch_request_local = patch('django_request_local.middleware.RequestLocal.get_current_request')
-#        mock_request_local = patch_request_local.start()
+        patch_request_local = patch('django_request_local.middleware.RequestLocal.get_current_request')
+        mock_request_local = patch_request_local.start()
         remote_user = 'http://authhost/user/testuser'
-#        mock_request = Mock()
-#        mock_request.COOKIES = {
-#            'remote_user': remote_user
-#        }
-#        mock_request_local.return_value = mock_request
+        mock_request = Mock()
+        mock_request.COOKIES = {
+            'remote_user': remote_user
+        }
+        mock_request_local.return_value = mock_request
 
         event = Event.objects.create(
             resource = 'http://storyhost/story/TST-1',
@@ -40,17 +40,17 @@ class TestEvent(TestCase):
         )
         self.assertEqual(event.created_by, remote_user)
 
-#        patch_request_local.stop()
+        patch_request_local.stop()
 
     def test_save_with_created_by(self):
-#        patch_request_local = patch('django_request_local.middleware.RequestLocal.get_current_request')
-#        mock_request_local = patch_request_local.start()
-#        remote_user = 'http://authhost/user/testuser'
-#        mock_request = Mock()
-#        mock_request.COOKIES = {
-#            'remote_user': remote_user
-#        }
-#        mock_request_local.return_value = mock_request
+        patch_request_local = patch('django_request_local.middleware.RequestLocal.get_current_request')
+        mock_request_local = patch_request_local.start()
+        remote_user = 'http://authhost/user/testuser'
+        mock_request = Mock()
+        mock_request.COOKIES = {
+            'remote_user': remote_user
+        }
+        mock_request_local.return_value = mock_request
 
         event = Event.objects.create(
             resource = 'http://storyhost/story/TST-1',
@@ -60,4 +60,4 @@ class TestEvent(TestCase):
         )
         self.assertEqual(event.created_by, 'http://authhost/user/sinapam')
 
-#        patch_request_local.stop()
+        patch_request_local.stop()

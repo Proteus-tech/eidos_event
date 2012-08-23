@@ -6,3 +6,4 @@ djangorestframework==0.3.3
 django-serene==0.0.5
 mock==0.7.0b4
 simplejson==2.1.2
+git+git://github.com/Proteus-tech/django-request-local.git

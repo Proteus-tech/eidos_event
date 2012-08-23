@@ -6,13 +6,13 @@ from djangorestframework.views import ListModelView, View
 from djangorestframework.response import ErrorResponse
 from djangorestframework import status
 
-
+from auth_client.permissions import IsAuthenticated
 
 from event.models import Event as Event
 from event.resources import EventResource
 
 class EventListView(ListModelView):
-#    permissions = (IsAuthenticated,)
+    permissions = (IsAuthenticated,)
     resource = EventResource
 
     def get_filter_kwargs(self, request, **kwargs):
@@ -36,7 +36,7 @@ class EventListView(ListModelView):
 
 
 class EventUpdatesView(View):
-#    permissions = (IsAuthenticated,)
+    permissions = (IsAuthenticated,)
     event_added = Gevent()
 
     @classmethod
@@ -54,7 +54,7 @@ class EventUpdatesView(View):
         server_latest_event_id = cache.get(project)
         if server_latest_event_id is None or (client_latest_event_id and server_latest_event_id <= int(client_latest_event_id)):
             self.event_added.wait()
-        # if we get to here, that means there is value in cache that is different from the client
+            # if we get to here, that means there is value in cache that is different from the client
         server_latest_event_id = cache.get(project)
         # return list of events from client_latest_event_id to the latest one
         filter_kwargs = {

@@ -1,5 +1,7 @@
 from django.db import models
 
+from auth_client.auth_client_utils import get_current_user_url
+
 class Event(models.Model):
     event_type = models.CharField(max_length=50)
     resource = models.URLField(max_length=500)
@@ -19,7 +21,7 @@ class Event(models.Model):
         return 'event', (), {'id': self.id}
 
     def save(self, *args, **kwargs):
-#        if self.id is None and not self.created_by:
-#            # created
-#            self.created_by = get_current_user_url()
+        if self.id is None and not self.created_by:
+            # created
+            self.created_by = get_current_user_url()
         super(Event, self).save(*args, **kwargs)
