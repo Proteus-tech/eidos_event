@@ -1,5 +1,7 @@
 # Django settings for sample_project project.
-
+import os
+PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
+PROJECT_PATH_JOIN = lambda a, *p:os.path.join(PROJECT_DIR, a, *p)
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -11,8 +13,8 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '',                      # Or path to database file if using sqlite3.
+        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': PROJECT_PATH_JOIN('event.db'),                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -116,10 +118,17 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
-    # 'django.contrib.admin',
+    'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
+    'sample_app',
+    'event',
+    'django_nose',
+
+    'djangorestframework',
 )
+
+TEST_RUNNER = 'django_nose.runner.NoseTestSuiteRunner'
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -149,3 +158,12 @@ LOGGING = {
         },
     }
 }
+
+#======== Cache Settings: used in push notification =======#
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': PROJECT_PATH_JOIN('.cache'),
+        }
+}
+#===== END: Cache Settings: used in push notification =====#

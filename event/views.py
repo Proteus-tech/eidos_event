@@ -6,13 +6,13 @@ from djangorestframework.views import ListModelView, View
 from djangorestframework.response import ErrorResponse
 from djangorestframework import status
 
-from auth_client.permissions import IsAuthenticated
+
 
 from event.models import Event as Event
 from event.resources import EventResource
 
 class EventListView(ListModelView):
-    permissions = (IsAuthenticated,)
+#    permissions = (IsAuthenticated,)
     resource = EventResource
 
     def get_filter_kwargs(self, request, **kwargs):
@@ -36,7 +36,7 @@ class EventListView(ListModelView):
 
 
 class EventUpdatesView(View):
-    permissions = (IsAuthenticated,)
+#    permissions = (IsAuthenticated,)
     event_added = Gevent()
 
     @classmethod
@@ -64,17 +64,3 @@ class EventUpdatesView(View):
         return Event.objects.filter(**filter_kwargs)
 
 signals.post_save.connect(EventUpdatesView.after_event_save, sender=Event)
-
-# for demo
-from djangorestframework.renderers import TemplateRenderer
-class DemoRenderer(TemplateRenderer):
-    template = 'event_updates.html'
-
-class DemoView(View):
-    renderers = (DemoRenderer,)
-
-    def get(self, request, *args, **kwargs):
-        get_params = request.GET.copy()
-        project = get_params.get('project')
-        events = Event.objects.filter(project=project)
-        return events
