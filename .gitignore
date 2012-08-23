@@ -28,3 +28,9 @@ pip-log.txt
 
 # IDE files
 .idea
+
+# Database file
+*.db
+
+# Cache
+.cache
