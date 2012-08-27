@@ -1,6 +1,9 @@
+# Compile Files #
+#################
 *.py[co]
 
-# Packages
+# Packages #
+############
 *.egg
 *.egg-info
 dist
@@ -13,24 +16,41 @@ sdist
 develop-eggs
 .installed.cfg
 
-# Installer logs
+# Installer logs #
+##################
 pip-log.txt
 
-# Unit test / coverage reports
+# Unit test / coverage reports #
+################################
 .coverage
 .tox
 
-#Translations
+# Translations #
+################
 *.mo
 
-#Mr Developer
-.mr.developer.cfg
-
-# IDE files
+# IDE files #
+#############
 .idea
 
-# Database file
-*.db
+# Database file #
+#################
+*.dbi
+*.log
+*.sql
+*.sqlite
 
-# Cache
+# Cache #
+#########
 .cache
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
