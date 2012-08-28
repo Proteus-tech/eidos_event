@@ -15,6 +15,6 @@ setup(
     long_description = read('README.md'),
     # django is Eidos current version of django
     install_requires=['django==1.3.1', 'djangorestframework>=0.3.3', 'django-serene>=0.0.5'],
-#    package_data={'restful': ['templates/restful/*.html']},
-    packages=['event','event.templates'],
+    package_data={'event': ['templates/*.html']},
+    packages=['event'],
 )
