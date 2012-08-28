@@ -2,10 +2,10 @@ from django.db.models import signals
 from gevent.event import Event as Gevent
 from datetime import datetime
 from django.core.cache import cache
+from djangorestframework import status
 from djangorestframework.views import ListModelView, View
 from djangorestframework.response import ErrorResponse
-from djangorestframework import status
-
+from djangorestframework.renderers import TemplateRenderer
 from auth_client.permissions import IsAuthenticated
 
 from event.models import Event as Event
@@ -64,3 +64,15 @@ class EventUpdatesView(View):
         return Event.objects.filter(**filter_kwargs)
 
 signals.post_save.connect(EventUpdatesView.after_event_save, sender=Event)
+
+class DemoRenderer(TemplateRenderer):
+    template = 'event_updates.html'
+
+class DemoView(View):
+    renderers = (DemoRenderer,)
+
+    def get(self, request, *args, **kwargs):
+        get_params = request.GET.copy()
+        project = get_params.get('project')
+        events = Event.objects.filter(project=project)
+        return events

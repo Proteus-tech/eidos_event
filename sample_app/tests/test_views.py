@@ -269,7 +269,7 @@ class TestDemoView(TestCase):
     """
     This is testing a demo view, so I'm going to test very lightly
     """
-    test_uri = '/demo/updates/demo?project=http://projecthost/project/PAM'
+    test_uri = '/event/updates/demo?project=http://projecthost/project/PAM'
     def setUp(self):
         for index in xrange(1,6):
             Event.objects.create(event_type='MyEvent%s' % index, resource='http://storyhost/PAM-1',
