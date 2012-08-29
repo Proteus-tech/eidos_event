@@ -7,7 +7,7 @@ from distutils.core import setup
 
 setup(
     name='eidos_event',
-    version='0.0.5',
+    version='0.0.6',
     description='Event library for Eidos',
     author='Proteus Technologies',
     author_email='team@proteus-tech.com',
@@ -16,5 +16,5 @@ setup(
     # django is Eidos current version of django
     install_requires=['django==1.3.1', 'djangorestframework>=0.3.3', 'django-serene>=0.0.5'],
     package_data={'event': ['templates/*.html']},
-    packages=['event'],
+    packages=['event', 'event.migrations'],
 )

@@ -128,6 +128,8 @@ INSTALLED_APPS = (
     'django_nose',
 
     'djangorestframework',
+
+    'south',
 )
 
 TEST_RUNNER = 'django_nose.runner.NoseTestSuiteRunner'
