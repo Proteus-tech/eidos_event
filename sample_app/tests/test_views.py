@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from mock import patch
+from mock import patch, DEFAULT
 import simplejson
 from datetime import datetime, timedelta
 from django.test import TestCase
@@ -150,8 +150,6 @@ class TestEventListView(TestCase):
 class TestEventUpdatesView(TestCase):
     test_uri = '/event/updates'
     def setUp(self):
-        self.patch_event_added = patch('event.views.EventUpdatesView.event_added')
-        self.mock_event_added = self.patch_event_added.start()
 
         User.objects.create_user(username='testuser', password='testuser', email='')
         self.client.login(username='testuser', password='testuser')
@@ -165,7 +163,6 @@ class TestEventUpdatesView(TestCase):
         # clear cache every time, so that it doesn't affect other tests
         cache.delete('http://projecthost/project/TST')
         cache.delete('http://projecthost/project/PAM')
-        self.patch_event_added.stop()
 
     def create_events(self):
         self.PAM_events = []
@@ -203,8 +200,11 @@ class TestEventUpdatesView(TestCase):
         response_dict = simplejson.loads(response.content)
         self.assertEqual(response_dict['details'], 'project is required')
 
-    def test_get_no_wait_client_latest_less_than_server_latest(self):
+    @patch.multiple('gevent.event.Event', set=DEFAULT, clear=DEFAULT, wait=DEFAULT)
+    def test_get_no_wait_client_latest_less_than_server_latest(self, set, clear, wait):
         self.create_events()
+        self.assertEqual(set.call_count, 10)
+        self.assertEqual(clear.call_count, 10)
         uri = '%s?project=%s&latest_event_id=%s' % (self.test_uri, self.test_project, self.TST_events[2].id)
         response = self.client.get(uri)
         self.assertEqual(response.status_code, 200)
@@ -213,8 +213,15 @@ class TestEventUpdatesView(TestCase):
         self.assertEqual(events[0]['id'], self.TST_events[3].id)
         self.assertEqual(events[1]['id'], self.TST_events[4].id)
 
-    def test_get_no_wait_client_does_not_send_latest_event_id(self):
+        # no wait
+        self.assertFalse(wait.called)
+
+    @patch.multiple('gevent.event.Event', set=DEFAULT, clear=DEFAULT, wait=DEFAULT)
+    def test_get_no_wait_client_does_not_send_latest_event_id(self, set, clear, wait):
         self.create_events()
+        self.assertEqual(set.call_count, 10)
+        self.assertEqual(clear.call_count, 10)
+
         uri = '%s?project=%s' % (self.test_uri, self.test_project)
         response = self.client.get(uri)
         self.assertEqual(response.status_code, 200)
@@ -226,8 +233,14 @@ class TestEventUpdatesView(TestCase):
         self.assertEqual(events[3]['id'], self.TST_events[3].id)
         self.assertEqual(events[4]['id'], self.TST_events[4].id)
 
-    def test_get_no_wait_client_sends_empty_latest_event_id(self):
+        # no wait
+        self.assertFalse(wait.called)
+
+    @patch.multiple('gevent.event.Event', set=DEFAULT, clear=DEFAULT, wait=DEFAULT)
+    def test_get_no_wait_client_sends_empty_latest_event_id(self, set, clear, wait):
         self.create_events()
+        self.assertEqual(set.call_count, 10)
+        self.assertEqual(clear.call_count, 10)
         uri = '%s?project=%s&latest_event_id=' % (self.test_uri, self.test_project)
         response = self.client.get(uri)
         self.assertEqual(response.status_code, 200)
@@ -239,31 +252,42 @@ class TestEventUpdatesView(TestCase):
         self.assertEqual(events[3]['id'], self.TST_events[3].id)
         self.assertEqual(events[4]['id'], self.TST_events[4].id)
 
-    def test_get_wait_client_latest_equal_server_latest(self):
+        # no wait
+        self.assertFalse(wait.called)
+
+    @patch.multiple('gevent.event.Event', set=DEFAULT, clear=DEFAULT, wait=DEFAULT)
+    def test_get_wait_client_latest_equal_server_latest(self,set, clear, wait):
         self.create_events()
+        self.assertEqual(set.call_count, 10)
+        self.assertEqual(clear.call_count, 10)
         uri = '%s?project=%s&latest_event_id=%s' % (self.test_uri, self.test_project, self.TST_events[4].id)
         response = self.client.get(uri)
+
         self.assertEqual(response.status_code, 200)
         # in real life, there should be no response return,
         # so we are just checking that wait is called
-        self.assertTrue(self.mock_event_added.wait.called)
+        self.assertTrue(wait.called)
 
-    def test_get_wait_client_latest_more_than_server_latest(self):
+    @patch.multiple('gevent.event.Event', set=DEFAULT, clear=DEFAULT, wait=DEFAULT)
+    def test_get_wait_client_latest_more_than_server_latest(self, set, clear, wait):
         self.create_events()
+        self.assertEqual(set.call_count, 10)
+        self.assertEqual(clear.call_count, 10)
         uri = '%s?project=%s&latest_event_id=%s' % (self.test_uri, self.test_project, self.TST_events[4].id+1)
         response = self.client.get(uri)
         self.assertEqual(response.status_code, 200)
         # in real life, there should be no response return,
         # so we are just checking that wait is called
-        self.assertTrue(self.mock_event_added.wait.called)
+        self.assertTrue(wait.called)
 
-    def test_get_wait_server_latest_is_none(self):
+    @patch.multiple('gevent.event.Event', set=DEFAULT, clear=DEFAULT, wait=DEFAULT)
+    def test_get_wait_server_latest_is_none(self,set, clear, wait):
         uri = '%s?project=%s&latest_event_id=3' % (self.test_uri, self.test_project) # just any number will do here
         response = self.client.get(uri)
         self.assertEqual(response.status_code, 200)
         # in real life, there should be no response return,
         # so we are just checking that wait is called
-        self.assertTrue(self.mock_event_added.wait.called)
+        self.assertTrue(wait.called)
 
 class TestDemoView(TestCase):
     """
