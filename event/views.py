@@ -43,8 +43,9 @@ class EventUpdatesView(View):
     def after_event_save(cls, sender, instance, created, **kwargs):
         if created:
             cache.set(instance.project, instance.id)
-            listener = cls.project_event_listeners.get(instance.project, Gevent())
+            listener = cls.project_event_listeners.get(instance.project)
             if listener == None:
+                listener = Gevent()
                 cls.project_event_listeners[instance.project] = listener
             listener.set()
             listener.clear()
@@ -56,8 +57,9 @@ class EventUpdatesView(View):
         client_latest_event_id = request.GET.get('latest_event_id')
         server_latest_event_id = cache.get(project)
         if server_latest_event_id is None or (client_latest_event_id and server_latest_event_id <= int(client_latest_event_id)):
-            listener = self.project_event_listeners.get(project, Gevent())
+            listener = self.project_event_listeners.get(project)
             if listener == None:
+                listener = Gevent()
                 self.project_event_listeners[project] = listener
             listener.wait()
 
