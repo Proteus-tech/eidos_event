@@ -6,7 +6,7 @@ class Event(models.Model):
     event_type = models.CharField(max_length=50)
     resource = models.URLField(max_length=500)
     project = models.URLField(max_length=500, blank=True, null=True) # we will use this to filter push updates, allow null because older events won't have
-    data = models.CharField(max_length=1024)
+    data = models.TextField()
     created_on = models.DateTimeField(auto_now_add=True)
     created_by = models.URLField(max_length=500, blank=True, null=True)
 
