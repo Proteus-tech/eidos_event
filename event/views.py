@@ -61,7 +61,7 @@ class EventUpdatesView(View):
             if listener is None:
                 listener = Gevent()
                 self.project_event_listeners[project] = listener
-            listener.wait(timeout=180)
+            listener.wait(timeout=59)
 
         # if we get to here, that means there is value in cache that is different from the client
         server_latest_event_id = cache.get(project)
