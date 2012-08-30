@@ -68,11 +68,11 @@ class EventUpdatesView(View):
         # return list of events from client_latest_event_id to the latest one
         filter_kwargs = {
             'project': project,
-            'id__gt': client_latest_event_id or 0
         }
-        event = Event.objects.filter(**filter_kwargs).order_by('-id')[:20]
-        event.reverse()
-        return event
+        if client_latest_event_id:
+            filter_kwargs['id__gt'] = client_latest_event_id
+        events = Event.objects.filter(**filter_kwargs).order_by('-id')[:20]
+        return [event for event in reversed(events)]
 
 signals.post_save.connect(EventUpdatesView.after_event_save, sender=Event)
 

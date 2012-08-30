@@ -309,6 +309,7 @@ class TestEventUpdatesView(TestCase):
         test_events = Event.objects.filter(project=self.test_project)
         self.assertEqual(len(test_events), 30)
         self.assertEqual(len(events), 20)
+        self.assertGreater(events[1]['id'], events[0]['id'])
 
         # in real life, there should be no response return,
         # so we are just checking that wait is called
