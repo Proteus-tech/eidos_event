@@ -289,6 +289,28 @@ class TestEventUpdatesView(TestCase):
         # so we are just checking that wait is called
         self.assertTrue(wait.called)
 
+    @patch.multiple('gevent.event.Event', set=DEFAULT, clear=DEFAULT, wait=DEFAULT)
+    def test_get_20_latest_event_at_most(self, set, clear, wait):
+        self.create_events()
+        self.create_events()
+        self.create_events()
+        self.create_events()
+        self.create_events()
+        self.create_events()
+        self.assertEqual(set.call_count, 60)
+        self.assertEqual(clear.call_count, 60)
+        uri = '%s?project=%s&latest_event_id=%s' % (self.test_uri, self.test_project, 0)
+        response = self.client.get(uri)
+        self.assertEqual(response.status_code, 200)
+        events = simplejson.loads(response.content)
+        test_events = Event.objects.filter(project=self.test_project)
+        self.assertEqual(len(test_events), 30)
+        self.assertEqual(len(events), 20)
+
+        # in real life, there should be no response return,
+        # so we are just checking that wait is called
+        self.assertFalse(wait.called)
+
 class TestDemoView(TestCase):
     """
     This is testing a demo view, so I'm going to test very lightly

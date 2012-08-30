@@ -70,7 +70,8 @@ class EventUpdatesView(View):
             'project': project,
             'id__gt': client_latest_event_id or 0
         }
-        return Event.objects.filter(**filter_kwargs)
+        event = Event.objects.filter(**filter_kwargs).order_by('-id')[:20]
+        return event.reverse()
 
 signals.post_save.connect(EventUpdatesView.after_event_save, sender=Event)
 
