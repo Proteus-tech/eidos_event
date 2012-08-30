@@ -247,6 +247,7 @@ class TestEventUpdatesView(TestCase):
         # in real life, there should be no response return,
         # so we are just checking that wait is called
         self.assertTrue(self.mock_event_added.wait.called)
+        self.assertTrue(self.mock_event_added.wait.call_args[1]['timeout'], 180)
 
     def test_get_wait_client_latest_more_than_server_latest(self):
         self.create_events()
@@ -256,6 +257,7 @@ class TestEventUpdatesView(TestCase):
         # in real life, there should be no response return,
         # so we are just checking that wait is called
         self.assertTrue(self.mock_event_added.wait.called)
+        self.assertTrue(self.mock_event_added.wait.call_args[1]['timeout'], 180)
 
     def test_get_wait_server_latest_is_none(self):
         uri = '%s?project=%s&latest_event_id=3' % (self.test_uri, self.test_project) # just any number will do here
@@ -264,6 +266,7 @@ class TestEventUpdatesView(TestCase):
         # in real life, there should be no response return,
         # so we are just checking that wait is called
         self.assertTrue(self.mock_event_added.wait.called)
+        self.assertTrue(self.mock_event_added.wait.call_args[1]['timeout'], 180)
 
 class TestDemoView(TestCase):
     """

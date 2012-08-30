@@ -53,7 +53,7 @@ class EventUpdatesView(View):
         client_latest_event_id = request.GET.get('latest_event_id')
         server_latest_event_id = cache.get(project)
         if server_latest_event_id is None or (client_latest_event_id and server_latest_event_id <= int(client_latest_event_id)):
-            self.event_added.wait()
+            self.event_added.wait(timeout=180)
             # if we get to here, that means there is value in cache that is different from the client
         server_latest_event_id = cache.get(project)
         # return list of events from client_latest_event_id to the latest one
