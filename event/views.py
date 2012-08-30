@@ -37,14 +37,18 @@ class EventListView(ListModelView):
 
 class EventUpdatesView(View):
     permissions = (IsAuthenticated,)
-    event_added = Gevent()
+    project_event_listeners = {}
 
     @classmethod
     def after_event_save(cls, sender, instance, created, **kwargs):
         if created:
             cache.set(instance.project, instance.id)
-            cls.event_added.set()
-            cls.event_added.clear()
+            listener = cls.project_event_listeners.get(instance.project)
+            if listener == None:
+                listener = Gevent()
+                cls.project_event_listeners[instance.project] = listener
+            listener.set()
+            listener.clear()
 
     def get(self, request, *args, **kwargs):
         project = request.GET.get('project')
@@ -53,15 +57,21 @@ class EventUpdatesView(View):
         client_latest_event_id = request.GET.get('latest_event_id')
         server_latest_event_id = cache.get(project)
         if server_latest_event_id is None or (client_latest_event_id and server_latest_event_id <= int(client_latest_event_id)):
-            self.event_added.wait(timeout=180)
-            # if we get to here, that means there is value in cache that is different from the client
+            listener = self.project_event_listeners.get(project)
+            if listener is None:
+                listener = Gevent()
+                self.project_event_listeners[project] = listener
+            listener.wait(timeout=180)
+
+        # if we get to here, that means there is value in cache that is different from the client
         server_latest_event_id = cache.get(project)
         # return list of events from client_latest_event_id to the latest one
         filter_kwargs = {
             'project': project,
             'id__gt': client_latest_event_id or 0
         }
-        return Event.objects.filter(**filter_kwargs)
+        event = Event.objects.filter(**filter_kwargs).order_by('-id')[:20]
+        return event.reverse()
 
 signals.post_save.connect(EventUpdatesView.after_event_save, sender=Event)
 
