@@ -267,6 +267,7 @@ class TestEventUpdatesView(TestCase):
         # in real life, there should be no response return,
         # so we are just checking that wait is called
         self.assertTrue(wait.called)
+        self.assertTrue(wait.call_args[1]['timeout'], 180)
 
     @patch.multiple('gevent.event.Event', set=DEFAULT, clear=DEFAULT, wait=DEFAULT)
     def test_get_wait_client_latest_more_than_server_latest(self, set, clear, wait):
@@ -279,6 +280,7 @@ class TestEventUpdatesView(TestCase):
         # in real life, there should be no response return,
         # so we are just checking that wait is called
         self.assertTrue(wait.called)
+        self.assertTrue(wait.call_args[1]['timeout'], 180)
 
     @patch.multiple('gevent.event.Event', set=DEFAULT, clear=DEFAULT, wait=DEFAULT)
     def test_get_wait_server_latest_is_none(self,set, clear, wait):
@@ -288,6 +290,7 @@ class TestEventUpdatesView(TestCase):
         # in real life, there should be no response return,
         # so we are just checking that wait is called
         self.assertTrue(wait.called)
+        self.assertTrue(wait.call_args[1]['timeout'], 180)
 
     @patch.multiple('gevent.event.Event', set=DEFAULT, clear=DEFAULT, wait=DEFAULT)
     def test_get_20_latest_event_at_most(self, set, clear, wait):
