@@ -56,6 +56,16 @@ class EventUpdatesView(View):
             raise ErrorResponse(status.HTTP_400_BAD_REQUEST, {'details': 'project is required'})
         client_latest_event_id = request.GET.get('latest_event_id')
         server_latest_event_id = cache.get(project)
+        if not server_latest_event_id:
+            # when the server is restarted, the cache is gone
+            try:
+                latest_event = Event.objects.latest('id')
+                server_latest_event_id = latest_event.id
+            except Event.DoesNotExist:
+                # really no event at all,
+                # we'll leave server_latest_event_id as None
+                pass
+
         if server_latest_event_id is None or (client_latest_event_id and server_latest_event_id <= int(client_latest_event_id)):
             listener = self.project_event_listeners.get(project)
             if listener is None:
