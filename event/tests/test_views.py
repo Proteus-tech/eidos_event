@@ -314,49 +314,6 @@ class TestEventUpdatesView(TestCase):
         # no wait
         self.assertFalse(wait.called)
 
-    @patch.multiple('gevent.event.Event', set=DEFAULT, clear=DEFAULT, wait=DEFAULT)
-    def test_get_no_wait_no_cache_but_there_are_events_client_latest_less_than_server_latest(self, set, clear, wait):
-        self.create_events()
-        # clear cache
-        cache.clear()
-        self.assertIsNone(cache.get(self.test_project))
-        uri = '%s?project=%s&latest_event_id=%s' % (self.test_uri, self.test_project, self.TST_events[2].id)
-        response = self.client.get(uri)
-        self.assertEqual(response.status_code, 200)
-        events = simplejson.loads(response.content)
-        self.assertEqual(len(events), 2)
-        self.assertEqual(events[0]['id'], self.TST_events[3].id)
-        self.assertEqual(events[1]['id'], self.TST_events[4].id)
-        # no wait
-        self.assertFalse(wait.called)
-
-    @patch.multiple('gevent.event.Event', set=DEFAULT, clear=DEFAULT, wait=DEFAULT)
-    def test_get_wait_no_cache_no_events(self, set, clear, wait):
-        # clear cache
-        cache.clear()
-        self.assertIsNone(cache.get(self.test_project))
-        uri = '%s?project=%s&latest_event_id=%s' % (self.test_uri, self.test_project, 0)
-        response = self.client.get(uri)
-        self.assertEqual(response.status_code, 200)
-        # in real life, there should be no response return,
-        # so we are just checking that wait is called
-        self.assertTrue(wait.called)
-        self.assertTrue(wait.call_args[1]['timeout'], 59)
-
-    @patch.multiple('gevent.event.Event', set=DEFAULT, clear=DEFAULT, wait=DEFAULT)
-    def test_get_wait_no_cache_but_there_are_events_client_latest_greater_than_server_latest(self, set, clear, wait):
-        self.create_events()
-        # clear cache
-        cache.clear()
-        self.assertIsNone(cache.get(self.test_project))
-        uri = '%s?project=%s&latest_event_id=%s' % (self.test_uri, self.test_project, 20)
-        response = self.client.get(uri)
-        self.assertEqual(response.status_code, 200)
-        # in real life, there should be no response return,
-        # so we are just checking that wait is called
-        self.assertTrue(wait.called)
-        self.assertTrue(wait.call_args[1]['timeout'], 59)
-
 class TestDemoView(TestCase):
     """
     This is testing a demo view, so I'm going to test very lightly
