@@ -8,3 +8,4 @@ mock==0.8.0
 simplejson==2.1.2
 git+git://github.com/Proteus-tech/django-request-local.git
 south
+git+git://github.com/Proteus-tech/django-logger.git

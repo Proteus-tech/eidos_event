@@ -1,6 +1,6 @@
 # Django settings for sample_project project.
 import os
-PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
+PROJECT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..')
 PROJECT_PATH_JOIN = lambda a, *p:os.path.join(PROJECT_DIR, a, *p)
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -171,3 +171,36 @@ CACHES = {
         }
 }
 #===== END: Cache Settings: used in push notification =====#
+
+#============= Logging Settings ====================#
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler'
+        }
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+            },
+        }
+}
+LOG_FILE_LOCATION = os.path.abspath(os.path.join(PROJECT_DIR, 'logs'))
+import logging
+from django_logger import LoggerClass
+
+logging.getLogger('django.db.backends').setLevel(logging.ERROR)
+logging.getLogger('PYREADLINE').setLevel(logging.ERROR)
+logging.getLogger('nose.selector').setLevel(logging.ERROR)
+
+logging.setLoggerClass(LoggerClass(
+    file_suffix = '.log',
+    default_level = logging.INFO,
+    files_path = LOG_FILE_LOCATION,
+))
+#==========END: Logging Settings ===================#
