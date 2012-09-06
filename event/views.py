@@ -47,9 +47,11 @@ class EventUpdatesView(View):
         if created:
             cache.set(instance.project, instance.id)
             listener = cls.project_event_listeners.get(instance.project)
-            if listener == None:
+            if listener is None:
+                logger.info('creating new listener for %s' % instance.project)
                 listener = Gevent()
                 cls.project_event_listeners[instance.project] = listener
+            logger.info('setting listener because of event: ' % instance)
             listener.set()
             listener.clear()
 
