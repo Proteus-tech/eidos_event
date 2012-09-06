@@ -51,7 +51,7 @@ class EventUpdatesView(View):
                 logger.info('creating new listener for %s' % instance.project)
                 listener = Gevent()
                 cls.project_event_listeners[instance.project] = listener
-            logger.info('setting listener because of event: ' % instance)
+            logger.info('setting listener because of event: %s' % instance)
             listener.set()
             listener.clear()
 
