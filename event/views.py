@@ -42,16 +42,15 @@ class EventUpdatesView(View):
     permissions = (IsAuthenticated,)
     project_event_listeners = {}
 
-    @classmethod
-    def after_event_save(cls, sender, instance, created, **kwargs):
+    def after_event_save(self, sender, instance, created, **kwargs):
         if created:
             cache.set(instance.project, instance.id)
-            listener = cls.project_event_listeners.get(instance.project)
+            listener = self.project_event_listeners.get(instance.project)
             if listener is None:
                 logger.info('creating new listener for %s' % instance.project)
                 listener = Gevent()
-                cls.project_event_listeners[instance.project] = listener
-            logger.info('setting listener because of event: %s' % instance)
+                self.project_event_listeners[instance.project] = listener
+            logger.info('setting listener because of event: %s' % instance.id)
             listener.set()
             listener.clear()
 
@@ -75,14 +74,17 @@ class EventUpdatesView(View):
         # return list of events from client_latest_event_id to the latest one
         filter_kwargs = {
             'project': project,
-        }
+            }
         if client_latest_event_id:
             filter_kwargs['id__gt'] = client_latest_event_id
         logger.info('filter_kwargs=%s' % filter_kwargs)
         events = Event.objects.filter(**filter_kwargs).order_by('-id')[:20]
+        logger.info('returning events: %s' % events)
         return [event for event in reversed(events)]
 
-signals.post_save.connect(EventUpdatesView.after_event_save, sender=Event)
+    def __init__(self):
+        super(EventUpdatesView, self).__init__()
+        signals.post_save.connect(self.after_event_save, sender=Event)
 
 class DemoRenderer(TemplateRenderer):
     template = 'event_updates.html'
