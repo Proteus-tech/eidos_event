@@ -50,7 +50,7 @@ class EventUpdatesView(View):
                 logger.info('creating new listener for %s' % instance.project)
                 listener = Gevent()
                 self.project_event_listeners[instance.project] = listener
-            logger.info('setting listener because of event: %s' % instance.id)
+            logger.debug('setting listener because of event: %s' % instance.id)
             listener.set()
             listener.clear()
 
@@ -60,9 +60,9 @@ class EventUpdatesView(View):
             raise ErrorResponse(status.HTTP_400_BAD_REQUEST, {'details': 'project is required'})
         client_latest_event_id = request.GET.get('latest_event_id')
         server_latest_event_id = cache.get(project)
-        logger.info('server_latest_event_id=%s' % server_latest_event_id)
+        logger.debug('server_latest_event_id=%s' % server_latest_event_id)
         if server_latest_event_id is None or (client_latest_event_id and server_latest_event_id <= int(client_latest_event_id)):
-            logger.info('we are going to wait')
+            logger.debug('we are going to wait')
             listener = self.project_event_listeners.get(project)
             if listener is None:
                 listener = Gevent()
@@ -77,9 +77,9 @@ class EventUpdatesView(View):
             }
         if client_latest_event_id:
             filter_kwargs['id__gt'] = client_latest_event_id
-        logger.info('filter_kwargs=%s' % filter_kwargs)
+        logger.debug('filter_kwargs=%s' % filter_kwargs)
         events = Event.objects.filter(**filter_kwargs).order_by('-id')[:20]
-        logger.info('returning events: %s' % events)
+        logger.debug('returning events: %s' % events)
         return [event for event in reversed(events)]
 
     def __init__(self):
