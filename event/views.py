@@ -46,7 +46,7 @@ def after_event_save(sender, instance, created, **kwargs):
 #            logger.info('creating new listener for %s' % instance.project)
 #            listener = Gevent()
 #            cache.set(instance.project, listener)
-#        logger.info('setting listener because of event: %s' % instance.id)
+        logger.info('setting listener because of event: %s' % instance.id)
         cache.set('event_project', instance.project)
         notifier.set()
         notifier.clear()
@@ -72,9 +72,8 @@ class EventUpdatesView(View):
             start = time.time()
             while keep_waiting:
                 logger.info('in keep_waiting')
-                is_not_timeout = notifier.wait(timeout=59)
-                logger.info('is_not_timeout: %s' % is_not_timeout)
-                if is_not_timeout and (time.time()-start < 59):
+                notifier.wait(timeout=59)
+                if time.time()-start < 59:
                     # there were some notification but is it ours?
                     event_project = cache.get('event_project')
                     if project == event_project:
@@ -83,6 +82,7 @@ class EventUpdatesView(View):
                     logger.info('it is NOT our project. Continue.')
                 else:
                     # timeout, just break
+                    logger.info('timeout, just break')
                     break
 #                logger.info('we are going to wait')
 #                listener = cache.get(project)
