@@ -1,3 +1,4 @@
+import time
 from django.db.models import signals
 from django.core.cache import cache
 from gevent.event import Event as Gevent
@@ -37,16 +38,18 @@ class EventListView(ListModelView):
         filter_kwargs = self.get_filter_kwargs(request, **kwargs)
         return super(EventListView, self).get(request, *args, **filter_kwargs)
 
+notifier = Gevent()
 def after_event_save(sender, instance, created, **kwargs):
     if created:
-        listener = cache.get(instance.project)
-        if listener is None:
-            logger.info('creating new listener for %s' % instance.project)
-            listener = Gevent()
-            cache.set(instance.project, listener)
-        logger.info('setting listener because of event: %s' % instance.id)
-        listener.set()
-        listener.clear()
+#        listener = cache.get(instance.project)
+#        if listener is None:
+#            logger.info('creating new listener for %s' % instance.project)
+#            listener = Gevent()
+#            cache.set(instance.project, listener)
+#        logger.info('setting listener because of event: %s' % instance.id)
+        cache.set('event_project', instance.project)
+        notifier.set()
+        notifier.clear()
 
 signals.post_save.connect(after_event_save, sender=Event)
 
@@ -65,12 +68,28 @@ class EventUpdatesView(View):
             server_latest_event_id = 0
         logger.info('server_latest_event_id=%s' % server_latest_event_id)
         if server_latest_event_id is None or (client_latest_event_id and server_latest_event_id <= int(client_latest_event_id)):
-            logger.info('we are going to wait')
-            listener = cache.get(project)
-            if listener is None:
-                listener = Gevent()
-                cache.set(project, listener)
-            listener.wait(timeout=59)
+            keep_waiting = True
+            start = time.time()
+            while keep_waiting:
+                logger.info('in keep_waiting')
+                is_not_timeout = notifier.wait(timeout=59)
+                logger.info('is_not_timeout: %s' % is_not_timeout)
+                if is_not_timeout and (time.time()-start < 59):
+                    # there were some notification but is it ours?
+                    event_project = cache.get('event_project')
+                    if project == event_project:
+                        logger.info('it is our project')
+                        break
+                    logger.info('it is NOT our project. Continue.')
+                else:
+                    # timeout, just break
+                    break
+#                logger.info('we are going to wait')
+#                listener = cache.get(project)
+#                if listener is None:
+#                    listener = Gevent()
+#                    cache.set(project, listener)
+#                listener.wait(timeout=59)
 
         # if we get to here, that means there was an event triggered
         # return list of events from client_latest_event_id to the latest one
