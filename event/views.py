@@ -1,7 +1,6 @@
 from django.db.models import signals
 from gevent.event import Event as Gevent
 from datetime import datetime
-from django.core.cache import cache
 from djangorestframework import status
 from djangorestframework.views import ListModelView, View
 from djangorestframework.response import ErrorResponse
@@ -44,7 +43,6 @@ class EventUpdatesView(View):
 
     def after_event_save(self, sender, instance, created, **kwargs):
         if created:
-            cache.set(instance.project, instance.id)
             listener = self.project_event_listeners.get(instance.project)
             if listener is None:
                 logger.info('creating new listener for %s' % instance.project)
@@ -59,7 +57,11 @@ class EventUpdatesView(View):
         if not project:
             raise ErrorResponse(status.HTTP_400_BAD_REQUEST, {'details': 'project is required'})
         client_latest_event_id = request.GET.get('latest_event_id')
-        server_latest_event_id = cache.get(project)
+        try:
+            server_latest_event = Event.objects.latest('id')
+            server_latest_event_id = server_latest_event.id
+        except Event.DoesNotExist:
+            server_latest_event_id = 0
         logger.debug('server_latest_event_id=%s' % server_latest_event_id)
         if server_latest_event_id is None or (client_latest_event_id and server_latest_event_id <= int(client_latest_event_id)):
             logger.debug('we are going to wait')
@@ -69,8 +71,7 @@ class EventUpdatesView(View):
                 self.project_event_listeners[project] = listener
             listener.wait(timeout=59)
 
-        # if we get to here, that means there is value in cache that is different from the client
-        server_latest_event_id = cache.get(project)
+        # if we get to here, that means there was an event triggered
         # return list of events from client_latest_event_id to the latest one
         filter_kwargs = {
             'project': project,
