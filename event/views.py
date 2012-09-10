@@ -38,23 +38,20 @@ class EventListView(ListModelView):
         filter_kwargs = self.get_filter_kwargs(request, **kwargs)
         return super(EventListView, self).get(request, *args, **filter_kwargs)
 
-notifier = Gevent()
-def after_event_save(sender, instance, created, **kwargs):
-    if created:
-#        listener = cache.get(instance.project)
-#        if listener is None:
-#            logger.info('creating new listener for %s' % instance.project)
-#            listener = Gevent()
-#            cache.set(instance.project, listener)
-        logger.info('setting listener because of event: %s' % instance.id)
-        cache.set('event_project', instance.project)
-        notifier.set()
-        notifier.clear()
-
-signals.post_save.connect(after_event_save, sender=Event)
-
 class EventUpdatesView(View):
     permissions = (IsAuthenticated,)
+    notifier = Gevent()
+
+    def __init__(self):
+        super(EventUpdatesView, self).__init__()
+        signals.post_save.connect(self.after_event_save, sender=Event)
+
+    def after_event_save(self, sender, instance, created, **kwargs):
+        if created:
+            logger.info('setting listener because of event: %s' % instance.id)
+            cache.set('event_project', instance.project)
+            self.notifier.set()
+            self.notifier.clear()
 
     def get(self, request, *args, **kwargs):
         project = request.GET.get('project')
@@ -72,7 +69,7 @@ class EventUpdatesView(View):
             start = time.time()
             while keep_waiting:
                 logger.info('in keep_waiting')
-                notifier.wait(timeout=59)
+                self.notifier.wait(timeout=59)
                 if time.time()-start < 59:
                     # there were some notification but is it ours?
                     event_project = cache.get('event_project')
@@ -84,12 +81,6 @@ class EventUpdatesView(View):
                     # timeout, just break
                     logger.info('timeout, just break')
                     break
-#                logger.info('we are going to wait')
-#                listener = cache.get(project)
-#                if listener is None:
-#                    listener = Gevent()
-#                    cache.set(project, listener)
-#                listener.wait(timeout=59)
 
         # if we get to here, that means there was an event triggered
         # return list of events from client_latest_event_id to the latest one
