@@ -36,21 +36,23 @@ class EventListView(ListModelView):
         filter_kwargs = self.get_filter_kwargs(request, **kwargs)
         return super(EventListView, self).get(request, *args, **filter_kwargs)
 
+project_event_listeners = {}
+
+def after_event_save(sender, instance, created, **kwargs):
+    if created:
+        listener = project_event_listeners.get(instance.project)
+        if listener is None:
+            logger.info('creating new listener for %s' % instance.project)
+            listener = Gevent()
+            project_event_listeners[instance.project] = listener
+        logger.debug('setting listener because of event: %s' % instance.id)
+        listener.set()
+        listener.clear()
+
+signals.post_save.connect(after_event_save, sender=Event)
 
 class EventUpdatesView(View):
     permissions = (IsAuthenticated,)
-    project_event_listeners = {}
-
-    def after_event_save(self, sender, instance, created, **kwargs):
-        if created:
-            listener = self.project_event_listeners.get(instance.project)
-            if listener is None:
-                logger.info('creating new listener for %s' % instance.project)
-                listener = Gevent()
-                self.project_event_listeners[instance.project] = listener
-            logger.debug('setting listener because of event: %s' % instance.id)
-            listener.set()
-            listener.clear()
 
     def get(self, request, *args, **kwargs):
         project = request.GET.get('project')
@@ -65,10 +67,10 @@ class EventUpdatesView(View):
         logger.debug('server_latest_event_id=%s' % server_latest_event_id)
         if server_latest_event_id is None or (client_latest_event_id and server_latest_event_id <= int(client_latest_event_id)):
             logger.debug('we are going to wait')
-            listener = self.project_event_listeners.get(project)
+            listener = project_event_listeners.get(project)
             if listener is None:
                 listener = Gevent()
-                self.project_event_listeners[project] = listener
+                project_event_listeners[project] = listener
             listener.wait(timeout=59)
 
         # if we get to here, that means there was an event triggered
@@ -82,10 +84,6 @@ class EventUpdatesView(View):
         events = Event.objects.filter(**filter_kwargs).order_by('-id')[:20]
         logger.debug('returning events: %s' % events)
         return [event for event in reversed(events)]
-
-    def __init__(self):
-        super(EventUpdatesView, self).__init__()
-        signals.post_save.connect(self.after_event_save, sender=Event)
 
 class DemoRenderer(TemplateRenderer):
     template = 'event_updates.html'
