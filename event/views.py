@@ -1,4 +1,5 @@
 from django.db.models import signals
+from django.core.cache import cache
 from gevent.event import Event as Gevent
 from datetime import datetime
 from djangorestframework import status
@@ -36,15 +37,13 @@ class EventListView(ListModelView):
         filter_kwargs = self.get_filter_kwargs(request, **kwargs)
         return super(EventListView, self).get(request, *args, **filter_kwargs)
 
-project_event_listeners = {}
-
 def after_event_save(sender, instance, created, **kwargs):
     if created:
-        listener = project_event_listeners.get(instance.project)
+        listener = cache.get(instance.project)
         if listener is None:
             logger.info('creating new listener for %s' % instance.project)
             listener = Gevent()
-            project_event_listeners[instance.project] = listener
+            cache.set(instance.project, listener)
         logger.info('setting listener because of event: %s' % instance.id)
         listener.set()
         listener.clear()
@@ -67,10 +66,10 @@ class EventUpdatesView(View):
         logger.info('server_latest_event_id=%s' % server_latest_event_id)
         if server_latest_event_id is None or (client_latest_event_id and server_latest_event_id <= int(client_latest_event_id)):
             logger.info('we are going to wait')
-            listener = project_event_listeners.get(project)
+            listener = cache.get(project)
             if listener is None:
                 listener = Gevent()
-                project_event_listeners[project] = listener
+                cache.set(project, listener)
             listener.wait(timeout=59)
 
         # if we get to here, that means there was an event triggered
