@@ -38,19 +38,21 @@ class EventListView(ListModelView):
         filter_kwargs = self.get_filter_kwargs(request, **kwargs)
         return super(EventListView, self).get(request, *args, **filter_kwargs)
 
+notifier = Gevent()
 class EventUpdatesView(View):
     permissions = (IsAuthenticated,)
-    notifier = Gevent()
 
     @classmethod
     def after_event_save(cls, sender, instance, created, **kwargs):
+        global notifier
         if created:
             logger.info('setting listener because of event: %s' % instance.id)
             cache.set('event_project', instance.project)
-            cls.notifier.set()
-            cls.notifier.clear()
+            notifier.set()
+            notifier.clear()
 
     def get(self, request, *args, **kwargs):
+        global notifier
         project = request.GET.get('project')
         if not project:
             raise ErrorResponse(status.HTTP_400_BAD_REQUEST, {'details': 'project is required'})
@@ -66,7 +68,7 @@ class EventUpdatesView(View):
             start = time.time()
             while keep_waiting:
                 logger.info('in keep_waiting')
-                self.notifier.wait(timeout=59)
+                notifier.wait(timeout=59)
                 if time.time()-start < 59:
                     # there were some notification but is it ours?
                     event_project = cache.get('event_project')
