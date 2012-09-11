@@ -54,8 +54,8 @@ class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         return True
 
     def after_event_save(self, sender, instance, created, **kwargs):
-        print '>>>emit_to_room', self.room
-        self.emit_to_room(self.room, 'new_event', instance.created_by, instance.serialize())
+        if created and instance.project == self.room:
+            self.emit_to_room(self.room, 'new_event', instance.created_by, instance.serialize())
 
 notifier = Gevent()
 class EventUpdatesView(View):
