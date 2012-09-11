@@ -42,16 +42,13 @@ class EventUpdatesView(View):
     permissions = (IsAuthenticated,)
     notifier = Gevent()
 
-    def __init__(self):
-        super(EventUpdatesView, self).__init__()
-        signals.post_save.connect(self.after_event_save, sender=Event)
-
-    def after_event_save(self, sender, instance, created, **kwargs):
+    @classmethod
+    def after_event_save(cls, sender, instance, created, **kwargs):
         if created:
             logger.info('setting listener because of event: %s' % instance.id)
             cache.set('event_project', instance.project)
-            self.notifier.set()
-            self.notifier.clear()
+            cls.notifier.set()
+            cls.notifier.clear()
 
     def get(self, request, *args, **kwargs):
         project = request.GET.get('project')
@@ -93,6 +90,8 @@ class EventUpdatesView(View):
         events = Event.objects.filter(**filter_kwargs).order_by('-id')[:20]
         logger.info('returning events: %s' % events)
         return [event for event in reversed(events)]
+
+signals.post_save.connect(EventUpdatesView.after_event_save, sender=Event)
 
 class DemoRenderer(TemplateRenderer):
     template = 'event_updates.html'
