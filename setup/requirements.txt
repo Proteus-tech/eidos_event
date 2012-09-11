@@ -9,3 +9,6 @@ simplejson==2.1.2
 git+git://github.com/Proteus-tech/django-request-local.git
 south
 git+git://github.com/Proteus-tech/django-logger.git
+
+# we need sdjango in gevent-socketio, that's why we are using directly from github
+git+git://github.com/abourget/gevent-socketio.git

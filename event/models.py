@@ -1,3 +1,5 @@
+import simplejson
+import datetime
 from django.db import models
 
 from auth_client.auth_client_utils import get_current_user_url
@@ -25,3 +27,13 @@ class Event(models.Model):
             # created
             self.created_by = get_current_user_url()
         super(Event, self).save(*args, **kwargs)
+
+    def serialize(self):
+        event = {}
+        for field in self._meta.fields:
+            name = field.name
+            value = getattr(self, field.attname)
+            if isinstance(field, models.DateTimeField):
+                value = value.isoformat()
+            event.update({name: value})
+        return event

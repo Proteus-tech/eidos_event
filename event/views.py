@@ -38,6 +38,25 @@ class EventListView(ListModelView):
         filter_kwargs = self.get_filter_kwargs(request, **kwargs)
         return super(EventListView, self).get(request, *args, **filter_kwargs)
 
+from socketio.namespace import BaseNamespace
+from socketio.mixins import RoomsMixin, BroadcastMixin
+from socketio.sdjango import namespace
+
+@namespace('/event/updates')
+class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
+
+    def initialize(self):
+        signals.post_save.connect(self.after_event_save, sender=Event)
+
+    def on_join(self, room):
+        self.room = room
+        self.join(room)
+        return True
+
+    def after_event_save(self, sender, instance, created, **kwargs):
+        print '>>>emit_to_room', self.room
+        self.emit_to_room(self.room, 'new_event', instance.created_by, instance.serialize())
+
 notifier = Gevent()
 class EventUpdatesView(View):
     permissions = (IsAuthenticated,)

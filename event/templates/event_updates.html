@@ -14,6 +14,7 @@
     </ul>
 </div>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="{{ STATIC_URL }}js/socket.io.js" type="text/javascript"></script>
 <script type="text/javascript">
     function callEventUpdates(success_handler , error_handler){
         var last_event_id = $('#events li:last-child').attr('id').replace('event_', '');
@@ -58,8 +59,20 @@
 
     };
 
+    var socket = io.connect('http://127.0.0.1:8000/event/updates');
+    socket.on('connect', function () {
+        $('#chat').addClass('connected');
+        socket.emit('join', 'http://127.0.0.1:8001/project/PAM');
+    });
+    socket.on('new_event', function(from, event_item){
+        var new_li = $('<li>');
+        new_li.attr('id', 'event_'+event_item['id']);
+        new_li.attr('project', event_item['project']);
+        new_li.html(event_item['event_type']+': '+event_item['data']);
+        $('#events').append(new_li);
+    });
     $(function(){
-        updater.poll();
+{#        updater.poll();#}
     });
 </script>
 </body>
