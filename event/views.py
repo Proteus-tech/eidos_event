@@ -40,22 +40,27 @@ class EventListView(ListModelView):
 
 from socketio.namespace import BaseNamespace
 from socketio.mixins import RoomsMixin, BroadcastMixin
-from socketio.sdjango import namespace
+from socketio import socketio_manage
 
-@namespace('/event/updates')
 class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
 
     def initialize(self):
         signals.post_save.connect(self.after_event_save, sender=Event)
 
-    def on_join(self, room):
+    def on_subscribe(self, room):
         self.room = room
         self.join(room)
         return True
 
     def after_event_save(self, sender, instance, created, **kwargs):
         if created and instance.project == self.room:
-            self.emit_to_room(self.room, 'new_event', instance.created_by, instance.serialize())
+            self.emit('new_event', instance.created_by, instance.serialize())
+#            self.emit_to_room(self.room, 'new_event', instance.created_by, instance.serialize())
+
+def socketio_service(request):
+    socketio_manage(request.environ, namespaces={'/event/updates': EventUpdatesNamespace}, request=request)
+
+    return {}
 
 notifier = Gevent()
 class EventUpdatesView(View):
