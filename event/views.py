@@ -61,9 +61,6 @@ class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
                 data = simplejson.loads(m['data'])
                 self.process_event(data)
 
-    def initialize(self):
-        signals.post_save.connect(self.after_event_save, sender=Event)
-
     def on_subscribe(self, room):
         self.room = room
         self.join(room)
@@ -73,10 +70,10 @@ class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     def on_new_event(self, *args):
         self.emit('new_event', *args)
 
-    def after_event_save(self, sender, instance, created, **kwargs):
-        if created and instance.project == self.room:
-            emit_to_channel(self.room, 'new_event', instance.created_by, instance.serialize())
+def after_event_save(sender, instance, created, **kwargs):
+    emit_to_channel(instance.project, 'new_event', instance.created_by, instance.serialize())
 #            self.emit_to_room(self.room, 'new_event', instance.created_by, instance.serialize())
+signals.post_save.connect(after_event_save, sender=Event)
 
 def socketio_service(request):
     retval = socketio_manage(request.environ, namespaces={'/event/updates': EventUpdatesNamespace}, request=request)

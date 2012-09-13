@@ -64,7 +64,7 @@
         $('#chat').addClass('connected');
         socket.emit('subscribe', 'http://127.0.0.1:8001/project/PAM');
     });
-    socket.on('new_event', function(from, event_item){
+    socket.on('new_event', function(room, from, event_item){
         var new_li = $('<li>');
         new_li.attr('id', 'event_'+event_item['id']);
         new_li.attr('project', event_item['project']);
