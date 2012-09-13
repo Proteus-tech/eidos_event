@@ -7,7 +7,7 @@ from distutils.core import setup
 
 setup(
     name='eidos_event',
-    version='0.0.33',
+    version='0.0.34',
     description='Event library for Eidos',
     author='Proteus Technologies',
     author_email='team@proteus-tech.com',
