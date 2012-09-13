@@ -149,6 +149,32 @@ class TestEventListView(EventTestBase):
         self.assertEqual(content[4]['links']['self']['href'], 'http://testserver/event/%s' % self.to_ready_for_testing_event.id)
         self.assertEqual(content[5]['links']['self']['href'], 'http://testserver/event/%s' % self.to_complete_event.id)
 
+class TestEventUpdatesNamespace(TestCase):
+    def setUp(self):
+        self.patch_redis_pubsub = patch('redis.Redis.pubsub')
+        self.mock_redis_pubsub = self.patch_redis_pubsub.start()
+        self.mock_redis_pubsub.listen = []
+
+        socket = Mock()
+        socket.session = {'rooms': Mock()}
+        self.environ = {'socketio': socket}
+        self.ns_name = '/event/updates'
+        self.request = Mock()
+
+    def test_on_subscribe(self):
+        eun = EventUpdatesNamespace(self.environ, self.ns_name, self.request)
+        eun.spawn = Mock()
+        eun.join = Mock()
+        room = 'http://127.0.0.1:8001/project/PAM'
+        eun.on_subscribe(room)
+        self.assertEqual(eun.room, room)
+        self.assertEqual(eun.join.call_args[0][0], room)
+        self.assertEqual(eun.spawn.call_args[0][0], eun.listener)
+        self.assertEqual(eun.spawn.call_args[0][1], room)
+
+    def tearDown(self):
+        self.patch_redis_pubsub.stop()
+
 class TestAfterEventSave(EventTestBase):
     def test_when_event_saved_it_is_published(self):
         self.assertFalse(self.mock_redis_publish.called)
