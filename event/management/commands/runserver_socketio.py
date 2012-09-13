@@ -12,7 +12,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.core.management.commands.runserver import naiveip_re, DEFAULT_PORT
 from django.utils.autoreload import code_changed, restart_with_reloader
 from socketio.server import SocketIOServer
-
+from gevent import monkey; monkey.patch_all()
 
 RELOAD = False
 
@@ -52,7 +52,7 @@ class Command(BaseCommand):
             print "SocketIOServer running on %s:%s" % bind
             print
             handler = self.get_handler(*args, **options)
-            server = SocketIOServer(bind, handler, resource="socket.io", policy_server=True)
+            server = SocketIOServer(bind, handler, resource="socket.io", policy_server=True, policy_listener=('0.0.0.0', 10843))
             server.serve_forever()
         except KeyboardInterrupt:
             if RELOAD:

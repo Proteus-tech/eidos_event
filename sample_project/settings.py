@@ -126,6 +126,7 @@ INSTALLED_APPS = (
     'sample_app',
     'event',
     'django_nose',
+    'gunicorn',
 
     'djangorestframework',
 
@@ -161,6 +162,16 @@ LOGGING = {
             'propagate': True,
         },
     }
+}
+
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+REDIS_DB = 0
+
+WEBSOCKET_REDIS_BROKER_DEFAULT = {
+    'HOST': 'localhost',
+    'PORT': 6379,
+    'DB': 0
 }
 
 #======== Cache Settings: used in push notification =======#

@@ -41,8 +41,25 @@ class EventListView(ListModelView):
 from socketio.namespace import BaseNamespace
 from socketio.mixins import RoomsMixin, BroadcastMixin
 from socketio import socketio_manage
+from event.utils import redis_connection
+import simplejson
+
+import redis
+def emit_to_channel(channel, event, *data):
+    r = redis.Redis()
+    args = [channel] + list(data)
+    r.publish('socketio_%s' % channel, simplejson.dumps({'name': event, 'args': args}))
 
 class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
+    def listener(self, room):
+        # ``redis_connection()`` is an utility function that returns a redis connection from a pool
+        r = redis_connection().pubsub()
+        r.subscribe('socketio_%s' % room)
+
+        for m in r.listen():
+            if m['type'] == 'message':
+                data = simplejson.loads(m['data'])
+                self.process_event(data)
 
     def initialize(self):
         signals.post_save.connect(self.after_event_save, sender=Event)
@@ -50,17 +67,63 @@ class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     def on_subscribe(self, room):
         self.room = room
         self.join(room)
+        self.spawn(self.listener, room)
         return True
+
+    def on_new_event(self, *args):
+        self.emit('new_event', *args)
 
     def after_event_save(self, sender, instance, created, **kwargs):
         if created and instance.project == self.room:
-            self.emit('new_event', instance.created_by, instance.serialize())
+            emit_to_channel(self.room, 'new_event', instance.created_by, instance.serialize())
 #            self.emit_to_room(self.room, 'new_event', instance.created_by, instance.serialize())
 
 def socketio_service(request):
-    socketio_manage(request.environ, namespaces={'/event/updates': EventUpdatesNamespace}, request=request)
+    retval = socketio_manage(request.environ, namespaces={'/event/updates': EventUpdatesNamespace}, request=request)
 
-    return {}
+    return retval
+
+from redis import Redis
+from django.conf import settings
+from django.http import HttpResponse
+from gevent import Greenlet
+
+def redis_client():
+    """Get a redis client."""
+    return Redis(settings.REDIS_HOST, settings.REDIS_PORT, settings.REDIS_DB,
+        socket_timeout=0.5)
+
+def room_channel(name='default'):
+    """Get redis pubsub channel key for given chat room."""
+    return 'chat:rooms:{n}'.format(n=name)
+
+def socketio(request):
+    """The socket.io view."""
+    io = request.environ['socketio']
+    redis_sub = redis_client().pubsub()
+    user = request.user.username
+
+    # Subscribe to incoming pubsub messages from redis.
+    def subscriber(io):
+        redis_sub.subscribe(room_channel())
+        redis_client().publish(room_channel(), user + ' connected.')
+        while io.connected:
+            for message in redis_sub.listen():
+                if message['type'] == 'message':
+                    io.send(message['data'])
+    greenlet = Greenlet.spawn(subscriber, io)
+
+    # Listen to incoming messages from client.
+    while io.connected:
+        message = io.recv()
+        if message:
+            redis_client().publish(room_channel(), user + ': ' + message[0])
+
+    # Disconnected. Publish disconnect message and kill subscriber greenlet.
+    redis_client().publish(room_channel(), user + ' disconnected')
+    greenlet.throw(Greenlet.GreenletExit)
+
+    return HttpResponse()
 
 notifier = Gevent()
 class EventUpdatesView(View):
