@@ -7,7 +7,7 @@ from distutils.core import setup
 
 setup(
     name='eidos_event',
-    version='0.0.34',
+    version='0.0.35',
     description='Event library for Eidos',
     author='Proteus Technologies',
     author_email='team@proteus-tech.com',
@@ -17,5 +17,5 @@ setup(
     install_requires=['django>=1.3.1', 'django-serene>=0.0.5', 'gevent-socketio==0.3.5-rc2', 'gunicorn==0.14.6', 'redis==2.6.2'],
     dependency_links=['http://github.com/proteus-tech/django-logger/tarball/master#egg=django-logger-0.1'],
     package_data={'event': ['templates/*.html']},
-    packages=['event', 'event.migrations'],
+    packages=['event', 'event.migrations', 'event.management'],
 )
