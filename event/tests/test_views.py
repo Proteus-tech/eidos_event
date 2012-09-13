@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 import simplejson
+from mock import patch, Mock
 from datetime import datetime, timedelta
 from django.contrib.auth.models import User
+from django.test import TestCase
+from django.test.client import RequestFactory
 
 from event.models import Event
+from event.views import socketio_service, EventUpdatesNamespace
 from event.tests.base import EventTestBase
 from sample_app.event_types import StoryAdded, StoryCompleted, StoryEstimateChanged, StoryStatusChanged
 
@@ -159,6 +163,30 @@ class TestAfterEventSave(EventTestBase):
         self.assertIn('"event_type": "MyEvent"', publish_msg)
         self.assertIn('"data": "{}"', publish_msg)
         self.assertIn('"name": "new_event"', publish_msg)
+
+class TestSocketioService(TestCase):
+    """
+    Test socketio_service (no need to inherit from EventTestBase because we'll not be calling redis)
+    """
+    def setUp(self):
+        self.factory = RequestFactory()
+
+        self.patch_gevent_joinall = patch('gevent.joinall')
+        self.mock_gevent_joinall = self.patch_gevent_joinall.start()
+
+    def test_get_socketio(self):
+        request = self.factory.get('/socket.io')
+        socket = Mock()
+        environ = {'socketio': socket}
+        request.environ = environ
+        response = socketio_service(request)
+        self.assertEqual(socket._set_environ.call_args[0][0], environ)
+        self.assertEqual(socket._set_namespaces.call_args[0][0], {'/event/updates': EventUpdatesNamespace})
+        self.assertTrue(socket._spawn_receiver_loop.called)
+        self.assertTrue(socket._spawn_watcher.called)
+
+    def tearDown(self):
+        self.patch_gevent_joinall.stop()
 
 class TestDemoView(EventTestBase):
     """
