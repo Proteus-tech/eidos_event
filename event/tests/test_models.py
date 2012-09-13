@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from mock import patch, Mock
 from django.core.urlresolvers import reverse
-from django.test import TestCase
 
 from event.models import Event
+from event.tests.base import EventTestBase
 
-class TestEvent(TestCase):
+class TestEvent(EventTestBase):
     def test_unicode(self):
         # create event
         event = Event.objects.create(

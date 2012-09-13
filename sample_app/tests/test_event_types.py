@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import simplejson
 from datetime import datetime
-from django.test import TestCase
 
+from event.tests.base import EventTestBase
 from sample_app.event_types import StoryAdded, StoryEstimateChanged, StoryCompleted, StoryStatusChanged
 
-class TestStoryAdded(TestCase):
+class TestStoryAdded(EventTestBase):
     def setUp(self):
+        super(TestStoryAdded, self).setUp()
         self.data = {
             'estimate': 2,
         }
@@ -29,8 +30,9 @@ class TestStoryAdded(TestCase):
         self.assertEqual(event_instance.event_type, 'StoryAdded')
         self.assertEqual(event_instance.data, simplejson.dumps(self.data))
 
-class TestStoryEstimated(TestCase):
+class TestStoryEstimated(EventTestBase):
     def setUp(self):
+        super(TestStoryEstimated, self).setUp()
         self.data = {
             'old_estimate': 1,
             'new_estimate': 2,
@@ -55,8 +57,9 @@ class TestStoryEstimated(TestCase):
         self.assertEqual(event_instance.event_type, 'StoryEstimateChanged')
         self.assertEqual(event_instance.data, simplejson.dumps(self.data))
 
-class TestStoryCompleted(TestCase):
+class TestStoryCompleted(EventTestBase):
     def setUp(self):
+        super(TestStoryCompleted, self).setUp()
         now = datetime.now()
         self.data = {
             'estimate': 2,
@@ -80,8 +83,9 @@ class TestStoryCompleted(TestCase):
         self.assertEqual(event_instance.event_type, 'StoryCompleted')
         self.assertEqual(event_instance.data, simplejson.dumps(self.data))
 
-class TestStoryStatusChanged(TestCase):
+class TestStoryStatusChanged(EventTestBase):
     def setUp(self):
+        super(TestStoryStatusChanged, self).setUp()
         self.data = {
             'from_status': 'Development In Progress',
             'to_status': 'Ready For Testing',

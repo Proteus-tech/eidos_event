@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import simplejson
 from datetime import datetime, timedelta
-from django.test import TestCase
 from django.contrib.auth.models import User
 
 from event.models import Event
+from event.tests.base import EventTestBase
 from sample_app.event_types import StoryAdded, StoryCompleted, StoryEstimateChanged, StoryStatusChanged
 
-class TestEventListView(TestCase):
+class TestEventListView(EventTestBase):
     def setUp(self):
+        super(TestEventListView, self).setUp()
         self.resource = 'http://storyhost/story/TST-1'
         self.project='http://projecthost/project/TST'
         self.now = datetime.now()
@@ -144,12 +145,13 @@ class TestEventListView(TestCase):
         self.assertEqual(content[4]['links']['self']['href'], 'http://testserver/event/%s' % self.to_ready_for_testing_event.id)
         self.assertEqual(content[5]['links']['self']['href'], 'http://testserver/event/%s' % self.to_complete_event.id)
 
-class TestDemoView(TestCase):
+class TestDemoView(EventTestBase):
     """
     This is testing a demo view, so I'm going to test very lightly
     """
     test_uri = '/event/updates/demo?project=http://projecthost/project/PAM'
     def setUp(self):
+        super(TestDemoView, self).setUp()
         for index in xrange(1,6):
             Event.objects.create(event_type='MyEvent%s' % index, resource='http://storyhost/PAM-1',
                 project='http://projecthost/project/PAM', data='{}')

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import simplejson
-from django.test import TestCase
 
 from event.base import EventType
+from event.tests.base import EventTestBase
 
 class SomeEventType(EventType):
     event_attributes = ['data_a', 'data_b', 'data_c']
 
-class TestEventType(TestCase):
+class TestEventType(EventTestBase):
     def test_create_event(self):
         data = {
             'data_a': 'a',
