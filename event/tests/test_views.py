@@ -153,13 +153,23 @@ class TestEventUpdatesNamespace(TestCase):
     def setUp(self):
         self.patch_redis_pubsub = patch('redis.Redis.pubsub')
         self.mock_redis_pubsub = self.patch_redis_pubsub.start()
-        self.mock_redis_pubsub.listen = []
+        self.redis = Mock()
+        self.redis.listen.return_value = [{'type':'message', 'data':'"abcd"'}]
+        self.mock_redis_pubsub.return_value = self.redis
 
         socket = Mock()
         socket.session = {'rooms': Mock()}
         self.environ = {'socketio': socket}
         self.ns_name = '/event/updates'
         self.request = Mock()
+
+    def test_listener(self):
+        eun = EventUpdatesNamespace(self.environ, self.ns_name, self.request)
+        eun.process_event = Mock()
+        room = 'http://127.0.0.1:8001/project/PAM'
+        eun.listener(room)
+        self.assertEqual(self.redis.subscribe.call_args[0][0], 'socketio_%s' % room)
+        self.assertEqual(eun.process_event.call_args[0][0], 'abcd')
 
     def test_on_subscribe(self):
         eun = EventUpdatesNamespace(self.environ, self.ns_name, self.request)
