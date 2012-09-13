@@ -172,6 +172,14 @@ class TestEventUpdatesNamespace(TestCase):
         self.assertEqual(eun.spawn.call_args[0][0], eun.listener)
         self.assertEqual(eun.spawn.call_args[0][1], room)
 
+    def test_on_new_event(self):
+        eun = EventUpdatesNamespace(self.environ, self.ns_name, self.request)
+        eun.emit = Mock()
+        eun.on_new_event('abc', 'def')
+        self.assertEqual(eun.emit.call_args[0][0], 'new_event')
+        self.assertEqual(eun.emit.call_args[0][1], 'abc')
+        self.assertEqual(eun.emit.call_args[0][2], 'def')
+
     def tearDown(self):
         self.patch_redis_pubsub.stop()
 
