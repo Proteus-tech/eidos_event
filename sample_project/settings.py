@@ -164,11 +164,7 @@ LOGGING = {
     }
 }
 
-REDIS_HOST = 'localhost'
-REDIS_PORT = 6379
-REDIS_DB = 0
-
-WEBSOCKET_REDIS_BROKER_DEFAULT = {
+WEBSOCKET_REDIS_BROKER = {
     'HOST': 'localhost',
     'PORT': 6379,
     'DB': 0

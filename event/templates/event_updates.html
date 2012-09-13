@@ -61,7 +61,6 @@
 
     var socket = io.connect('http://127.0.0.1:8000/event/updates');
     socket.on('connect', function () {
-        $('#chat').addClass('connected');
         socket.emit('subscribe', 'http://127.0.0.1:8001/project/PAM');
     });
     socket.on('new_event', function(room, from, event_item){
