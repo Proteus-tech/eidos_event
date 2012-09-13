@@ -145,6 +145,21 @@ class TestEventListView(EventTestBase):
         self.assertEqual(content[4]['links']['self']['href'], 'http://testserver/event/%s' % self.to_ready_for_testing_event.id)
         self.assertEqual(content[5]['links']['self']['href'], 'http://testserver/event/%s' % self.to_complete_event.id)
 
+class TestAfterEventSave(EventTestBase):
+    def test_when_event_saved_it_is_published(self):
+        self.assertFalse(self.mock_redis_publish.called)
+        Event.objects.create(event_type='MyEvent', resource='http://storyhost/PAM-1',
+            project='http://projecthost/project/PAM', data='{}')
+        self.assertEqual(self.mock_redis_publish.call_args[0][0], 'socketio_http://projecthost/project/PAM')
+
+        publish_msg = self.mock_redis_publish.call_args[0][1]
+        self.assertIn('{"args": ["http://projecthost/project/PAM", "", ', publish_msg)
+        self.assertIn('"project": "http://projecthost/project/PAM"', publish_msg)
+        self.assertIn('"resource": "http://storyhost/PAM-1"', publish_msg)
+        self.assertIn('"event_type": "MyEvent"', publish_msg)
+        self.assertIn('"data": "{}"', publish_msg)
+        self.assertIn('"name": "new_event"', publish_msg)
+
 class TestDemoView(EventTestBase):
     """
     This is testing a demo view, so I'm going to test very lightly
