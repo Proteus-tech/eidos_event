@@ -40,12 +40,18 @@ from socketio.mixins import RoomsMixin, BroadcastMixin
 from socketio import socketio_manage
 from event.utils import redis_connection
 import simplejson
+from redis.exceptions import ConnectionError
 
 import redis
 def emit_to_channel(channel, event, *data):
     r = redis.Redis()
     args = [channel] + list(data)
-    r.publish('socketio_%s' % channel, simplejson.dumps({'name': event, 'args': args}))
+    try:
+        r.publish('socketio_%s' % channel, simplejson.dumps({'name': event, 'args': args}))
+    except ConnectionError:
+        # in case we don't have redis running
+        logger.warning('Redis does not seem to be running')
+        pass
 
 class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     def listener(self, room):
