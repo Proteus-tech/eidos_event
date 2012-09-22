@@ -3,6 +3,7 @@ import simplejson
 from mock import patch, Mock
 from datetime import datetime, timedelta
 from django.contrib.auth.models import User
+from django.http import HttpResponse
 from django.test import TestCase
 from django.test.client import RequestFactory
 
@@ -224,6 +225,7 @@ class TestSocketioService(TestCase):
         environ = {'socketio': socket}
         request.environ = environ
         response = socketio_service(request)
+        self.assertTrue(isinstance(response, HttpResponse))
         self.assertEqual(socket._set_environ.call_args[0][0], environ)
         self.assertEqual(socket._set_namespaces.call_args[0][0], {'/event/updates': EventUpdatesNamespace})
         self.assertTrue(socket._spawn_receiver_loop.called)

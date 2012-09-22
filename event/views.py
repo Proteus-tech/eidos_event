@@ -1,5 +1,6 @@
 from django.db.models import signals
 from datetime import datetime
+from django.http import HttpResponse
 from djangorestframework import status
 from djangorestframework.views import ListModelView, View
 from djangorestframework.response import ErrorResponse
@@ -79,9 +80,9 @@ def after_event_save(sender, instance, created, **kwargs):
 signals.post_save.connect(after_event_save, sender=Event)
 
 def socketio_service(request):
-    retval = socketio_manage(request.environ, namespaces={'/event/updates': EventUpdatesNamespace}, request=request)
-
-    return retval
+    socketio_manage(request.environ, namespaces={'/event/updates': EventUpdatesNamespace}, request=request)
+    # Only returning this so that it doesn't throw exception, but it doesn't really need anything returned
+    return HttpResponse('')
 
 class DemoRenderer(TemplateRenderer):
     template = 'event_updates.html'
