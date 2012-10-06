@@ -74,6 +74,12 @@ class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     def on_new_event(self, *args):
         self.emit('new_event', *args)
 
+    def recv_disconnect(self):
+        # since the connection to redis doesn't get closed properly in the disconnect function,
+        # we are overriding this function to call it here
+        self.kill_local_jobs()
+        self.disconnect(silent=True)
+
 def after_event_save(sender, instance, created, **kwargs):
     emit_to_channel(instance.project, 'new_event', instance.created_by, instance.serialize())
 
