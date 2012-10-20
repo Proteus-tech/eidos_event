@@ -81,7 +81,8 @@ class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         self.disconnect(silent=True)
 
 def after_event_save(sender, instance, created, **kwargs):
-    emit_to_channel(instance.project, 'new_event', instance.created_by, instance.serialize())
+    if created:
+        emit_to_channel(instance.project, 'new_event', instance.created_by, instance.serialize())
 
 signals.post_save.connect(after_event_save, sender=Event)
 
