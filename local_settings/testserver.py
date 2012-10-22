@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from sample_project.settings import *
+
 DEBUG=False
 
 DATABASES = {
