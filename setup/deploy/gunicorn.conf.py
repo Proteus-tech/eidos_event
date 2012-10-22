@@ -3,7 +3,7 @@ from os import environ
 from gevent import monkey
 monkey.patch_all()
 
-bind = "0.0.0.0:8003"
+bind = "0.0.0.0:9000"
 workers = 2 # fine for dev, you probably want to increase this number in production
 worker_class = "socketio.sgunicorn.GeventSocketIOWorker"
 
