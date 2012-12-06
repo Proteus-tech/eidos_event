@@ -10,6 +10,8 @@ from auth_client.permissions import IsAuthenticated
 from event.models import Event as Event
 from event.resources import EventResource
 
+import simplejson
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -18,18 +20,27 @@ class EventListView(ListModelView):
     resource = EventResource
 
     def get_filter_kwargs(self, request, **kwargs):
-        get_params = request.GET.copy()
-        if not get_params:
+        is_get_story_list = True
+
+        try:
+            story_list = request.META['HTTP_RESOURCE__IN']
+        except KeyError :
+            is_get_story_list = False
+
+        get_params = request.GET
+
+        if  not len(get_params) and not is_get_story_list:
             raise ErrorResponse(status.HTTP_400_BAD_REQUEST, 'You must pass in a filter.')
         filter_kwargs = kwargs.copy()
-        for key, value in get_params.items():
-            if key.startswith('created_on__'):
-                # convert datetime to database format
-                value = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f')
-            elif key.startswith('resource__in'):
-                filter_kwargs.update({key:request.GET.getlist('resource__in')})
-                continue
-            filter_kwargs.update({key:value})
+        if is_get_story_list:
+            story_list = simplejson.loads(story_list)
+            filter_kwargs.update({'resource__in':story_list})
+        if len(get_params):
+            for key, value in get_params.items():
+                if key.startswith('created_on__'):
+                    # convert datetime to database format
+                    value = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f')
+                filter_kwargs.update({key:value})
         return filter_kwargs
 
     def get(self, request, *args, **kwargs):

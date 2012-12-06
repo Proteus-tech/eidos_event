@@ -15,7 +15,8 @@ from sample_app.event_types import StoryAdded, StoryCompleted, StoryEstimateChan
 class TestEventListView(EventTestBase):
     def setUp(self):
         super(TestEventListView, self).setUp()
-        self.resource = 'http://storyhost/story/TST-1'
+        self.story_list = "[\"http://storyhost/story/TST-1\"]"
+        self.resource = "http://storyhost/story/TST-1"
         self.project='http://projecthost/project/TST'
         self.now = datetime.now()
         self.added = StoryAdded(resource=self.resource, project=self.project, data={
@@ -75,7 +76,7 @@ class TestEventListView(EventTestBase):
         )
 
     def test_get_event_list_filtered_by_resource(self):
-        response = self.client.get('/events', {'resource': self.resource})
+        response = self.client.get('/events', HTTP_RESOURCE__IN=self.story_list)
         self.assertEqual(response.status_code, 200)
         content = simplejson.loads(response.content)
         self.assertEqual(len(content), 6)
@@ -128,7 +129,7 @@ class TestEventListView(EventTestBase):
         self.assertContains(response, 'You must pass in a filter', status_code=400)
 
     def test_get_event_list_check_content(self):
-        response = self.client.get('/events', {'resource': self.resource})
+        response = self.client.get('/events', HTTP_RESOURCE__IN=self.story_list)
         self.assertEqual(response.status_code, 200)
         content = simplejson.loads(response.content)
         self.assertEqual(len(content), 6)
