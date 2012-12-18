@@ -63,7 +63,6 @@ def emit_to_channel(channel, event, *data):
     args = [channel] + list(data)
     try:
         r.publish('socketio_%s' % channel, simplejson.dumps({'name': event, 'args': args}))
-        print '>>>>', r.publish.call_args
     except ConnectionError:
         # in case we don't have redis running
         logger.warning('Redis does not seem to be running')
