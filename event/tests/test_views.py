@@ -200,6 +200,9 @@ class TestAfterEventSave(EventTestBase):
         self.assertFalse(self.mock_redis_publish.called)
         Event.objects.create(event_type='MyEvent', resource='http://storyhost/PAM-1',
             project='http://projecthost/project/PAM', data='{}')
+        self.assertEqual(self.mock_redis.call_args[1]['host'], 'localhost')
+        self.assertEqual(self.mock_redis.call_args[1]['port'], 6379)
+        self.assertEqual(self.mock_redis.call_args[1]['db'], 0)
         self.assertEqual(self.mock_redis_publish.call_args[0][0], 'socketio_http://projecthost/project/PAM')
 
         publish_msg = self.mock_redis_publish.call_args[0][1]

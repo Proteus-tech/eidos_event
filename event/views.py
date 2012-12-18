@@ -1,6 +1,7 @@
 from django.db.models import signals
 from datetime import datetime
 from django.http import HttpResponse
+from django.conf import settings
 from djangorestframework import status
 from djangorestframework.views import ListModelView, View
 from djangorestframework.response import ErrorResponse
@@ -56,10 +57,13 @@ from redis.exceptions import ConnectionError
 
 import redis
 def emit_to_channel(channel, event, *data):
-    r = redis.Redis()
+    connection_kwargs = getattr(settings, 'WEBSOCKET_REDIS_BROKER', {})
+    lower_connection_kwargs = (connection_kwargs and dict((k.lower(), v) for k,v in connection_kwargs.iteritems())) or connection_kwargs
+    r = redis.Redis(**lower_connection_kwargs)
     args = [channel] + list(data)
     try:
         r.publish('socketio_%s' % channel, simplejson.dumps({'name': event, 'args': args}))
+        print '>>>>', r.publish.call_args
     except ConnectionError:
         # in case we don't have redis running
         logger.warning('Redis does not seem to be running')
