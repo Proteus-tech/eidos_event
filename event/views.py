@@ -24,7 +24,7 @@ class EventListView(ListModelView):
         is_get_story_list = True
 
         try:
-            story_list = request.META['HTTP_RESOURCE__IN']
+            story_list = request.META['HTTP_X_RESOURCE_IN']
         except KeyError :
             is_get_story_list = False
 

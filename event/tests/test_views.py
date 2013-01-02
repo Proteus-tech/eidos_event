@@ -76,7 +76,7 @@ class TestEventListView(EventTestBase):
         )
 
     def test_get_event_list_filtered_by_resource(self):
-        response = self.client.get('/events', HTTP_RESOURCE__IN=self.story_list)
+        response = self.client.get('/events', HTTP_X_RESOURCE_IN=self.story_list)
         self.assertEqual(response.status_code, 200)
         content = simplejson.loads(response.content)
         self.assertEqual(len(content), 6)
@@ -129,7 +129,7 @@ class TestEventListView(EventTestBase):
         self.assertContains(response, 'You must pass in a filter', status_code=400)
 
     def test_get_event_list_check_content(self):
-        response = self.client.get('/events', HTTP_RESOURCE__IN=self.story_list)
+        response = self.client.get('/events', HTTP_X_RESOURCE_IN=self.story_list)
         self.assertEqual(response.status_code, 200)
         content = simplejson.loads(response.content)
         self.assertEqual(len(content), 6)
