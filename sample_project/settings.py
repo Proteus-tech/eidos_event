@@ -125,12 +125,12 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
     'sample_app',
     'event',
+
     'django_nose',
     'gunicorn',
-
     'djangorestframework',
-
     'south',
+    'djcelery'
 )
 
 TEST_RUNNER = 'django_nose.runner.NoseTestSuiteRunner'
@@ -169,6 +169,12 @@ WEBSOCKET_REDIS_BROKER = {
     'PORT': 6379,
     'DB': 0
 }
+#======== Celery Settings: use to push task into Redis ======#
+import djcelery
+djcelery.setup_loader()
+# format redis://:password@hostname:port/db_number
+BROKER_URL = 'redis://localhost:6379/0'
+#======== END: Celery Settings: use to push task into Redis ======#
 
 #======== Cache Settings: used in push notification =======#
 CACHES = {

@@ -54,6 +54,7 @@ from socketio import socketio_manage
 from event.utils import redis_connection
 import simplejson
 from redis.exceptions import ConnectionError
+from celery import execute
 
 import redis
 def emit_to_channel(channel, event, *data):
@@ -67,6 +68,11 @@ def emit_to_channel(channel, event, *data):
         # in case we don't have redis running
         logger.warning('Redis does not seem to be running')
         pass
+
+def add_event_task(event):
+    #execute.send_task(taskname, arguments, kwargs={}, countdown, expires,...)
+    execute.send_task('api.tasks.calculate_release_burndown', args=[event], kwargs={})
+
 
 class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     def listener(self, room):
