@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime, date
 import simplejson
 from event.models import Event
+
+dthandler = lambda obj: obj.isoformat() if isinstance(obj, datetime) or isinstance(obj, date) else None
 
 class EventType(object):
     event_attributes = tuple()
@@ -28,7 +31,7 @@ class EventType(object):
         event_type = self.__class__.__name__
         resource = self.resource
         project = self.project
-        data = simplejson.dumps(to_update_data)
+        data = simplejson.dumps(to_update_data, default=dthandler)
         created_by = self.created_by
         if hasattr(self, 'event_id'):
             try:
