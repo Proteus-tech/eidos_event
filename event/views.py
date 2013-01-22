@@ -71,7 +71,7 @@ def emit_to_channel(channel, event, *data):
 
 def add_event_task(event):
     #execute.send_task(taskname, arguments, kwargs={}, countdown, expires,...)
-    execute.send_task('api.tasks.calculate_release_burndown', args=[event], kwargs={})
+    execute.send_task('tasks.tasks.calculate_release_burndown', args=[event])
 
 
 class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):

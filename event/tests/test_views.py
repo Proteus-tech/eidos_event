@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 
 from event.models import Event
-from event.views import socketio_service, EventUpdatesNamespace
+from event.views import socketio_service, EventUpdatesNamespace, add_event_task
 from event.tests.base import EventTestBase
 from sample_app.event_types import StoryAdded, StoryCompleted, StoryEstimateChanged, StoryStatusChanged
 
@@ -196,6 +196,16 @@ class TestEventUpdatesNamespace(TestCase):
         self.patch_redis_pubsub.stop()
 
 class TestAfterEventSave(EventTestBase):
+
+    def setUp(self):
+        super(TestAfterEventSave, self).setUp()
+        self.patch_send_task = patch('celery.execute.send_task')
+        self.mock_send_task = self.patch_send_task.start()
+
+    def tearDown(self):
+        self.patch_send_task.stop()
+        super(TestAfterEventSave, self).tearDown()
+
     def test_when_event_saved_it_is_published(self):
         self.assertFalse(self.mock_redis_publish.called)
         Event.objects.create(event_type='MyEvent', resource='http://storyhost/PAM-1',
@@ -212,6 +222,11 @@ class TestAfterEventSave(EventTestBase):
         self.assertIn('"event_type": "MyEvent"', publish_msg)
         self.assertIn('"data": "{}"', publish_msg)
         self.assertIn('"name": "new_event"', publish_msg)
+
+    def test_when_event_saved_task_is_sent(self):
+        pass
+
+
 
 class TestSocketioService(TestCase):
     """
@@ -257,3 +272,21 @@ class TestDemoView(EventTestBase):
         self.assertContains(response, 'MyEvent3: {}')
         self.assertContains(response, 'MyEvent4: {}')
         self.assertContains(response, 'MyEvent5: {}')
+
+class TestAddEventTask(EventTestBase):
+
+    def setUp(self):
+        super(TestAddEventTask, self).setUp()
+        self.patch_send_task = patch('celery.execute.send_task')
+        self.mock_send_task = self.patch_send_task.start()
+
+    def tearDown(self):
+        self.patch_send_task.stop()
+        super(TestAddEventTask, self).tearDown()
+
+    def test_add_event_task_send_task_correctly(self):
+        event = Event(event_type='MyEvent11', resource='http://storyhost/PAM-1',
+            project='http://projecthost/project/PAM', data='{}')
+        add_event_task(event)
+        self.assertEqual(self.mock_send_task.call_args[0][0], 'tasks.tasks.calculate_release_burndown')
+        self.assertEqual(self.mock_send_task.call_args[1]['args'], [event])
