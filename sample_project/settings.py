@@ -130,7 +130,6 @@ INSTALLED_APPS = (
     'gunicorn',
     'djangorestframework',
     'south',
-    'djcelery'
 )
 
 TEST_RUNNER = 'django_nose.runner.NoseTestSuiteRunner'
