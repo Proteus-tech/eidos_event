@@ -224,7 +224,10 @@ class TestAfterEventSave(EventTestBase):
         self.assertIn('"name": "new_event"', publish_msg)
 
     def test_when_event_saved_task_is_sent(self):
-        pass
+        event = Event.objects.create(event_type='MyEvent11', resource='http://storyhost/PAM-1',
+            project='http://projecthost/project/PAM', data='{}')
+        self.assertEqual(self.mock_send_task.call_args[0][0], 'tasks.tasks.calculate_release_burndown')
+        self.assertEqual(self.mock_send_task.call_args[1]['args'], [event])
 
 
 
