@@ -197,15 +197,6 @@ class TestEventUpdatesNamespace(TestCase):
 
 class TestAfterEventSave(EventTestBase):
 
-    def setUp(self):
-        super(TestAfterEventSave, self).setUp()
-        self.patch_send_task = patch('celery.execute.send_task')
-        self.mock_send_task = self.patch_send_task.start()
-
-    def tearDown(self):
-        self.patch_send_task.stop()
-        super(TestAfterEventSave, self).tearDown()
-
     def test_when_event_saved_it_is_published(self):
         self.assertFalse(self.mock_redis_publish.called)
         Event.objects.create(event_type='MyEvent', resource='http://storyhost/PAM-1',
@@ -277,15 +268,6 @@ class TestDemoView(EventTestBase):
         self.assertContains(response, 'MyEvent5: {}')
 
 class TestAddEventTask(EventTestBase):
-
-    def setUp(self):
-        super(TestAddEventTask, self).setUp()
-        self.patch_send_task = patch('celery.execute.send_task')
-        self.mock_send_task = self.patch_send_task.start()
-
-    def tearDown(self):
-        self.patch_send_task.stop()
-        super(TestAddEventTask, self).tearDown()
 
     def test_add_event_task_send_task_correctly(self):
         event = Event(event_type='MyEvent11', resource='http://storyhost/PAM-1',

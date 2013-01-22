@@ -2,6 +2,7 @@ from django.db.models import signals
 from datetime import datetime
 from django.http import HttpResponse
 from django.conf import settings
+from django_request_local.middleware import RequestLocal
 from djangorestframework import status
 from djangorestframework.views import ListModelView, View
 from djangorestframework.response import ErrorResponse
@@ -70,8 +71,12 @@ def emit_to_channel(channel, event, *data):
         pass
 
 def add_event_task(event):
+    print RequestLocal.get_current_request
+    request = RequestLocal.get_current_request()
+    user = request and request.user
+    cookies = request and request.COOKIES
     #execute.send_task(taskname, arguments, kwargs={}, countdown, expires,...)
-    execute.send_task('tasks.tasks.calculate_release_burndown', args=[event])
+    execute.send_task('tasks.tasks.calculate_release_burndown', args=[event, user, cookies])
 
 
 class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
@@ -101,6 +106,7 @@ class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         self.disconnect(silent=True)
 
 def after_event_save(sender, instance, created, **kwargs):
+    print instance.serialize()
     if created:
         emit_to_channel(instance.project, 'new_event', instance.created_by, instance.serialize())
         add_event_task(instance)
