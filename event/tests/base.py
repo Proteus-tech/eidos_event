@@ -14,12 +14,12 @@ class EventTestBase(TestCase):
         self.patch_get_current_request = patch('django_request_local.middleware.RequestLocal.get_current_request')
         self.mock_get_current_request = self.patch_get_current_request.start()
         remote_user = 'http://authhost/user/testuser'
-        mock_request = Mock()
-        mock_request.COOKIES = {
+        self.mock_request = Mock()
+        self.mock_request.COOKIES = {
             'remote_user': remote_user
         }
-        mock_request.user = User.objects.create_user('event_user', '', 'event_user')
-        self.mock_get_current_request.return_value = mock_request
+        self.mock_request.user = User.objects.create_user('event_user', '', 'event_user')
+        self.mock_get_current_request.return_value = self.mock_request
 
         self.patch_send_task = patch('celery.execute.send_task')
         self.mock_send_task = self.patch_send_task.start()
