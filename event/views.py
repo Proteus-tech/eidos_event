@@ -68,10 +68,8 @@ def emit_to_channel(channel, event, *data):
     except ConnectionError:
         # in case we don't have redis running
         logger.warning('Redis does not seem to be running')
-        pass
 
 def add_event_task(event):
-    print RequestLocal.get_current_request
     request = RequestLocal.get_current_request()
     user = request and request.user
     cookies = request and request.COOKIES
@@ -106,7 +104,6 @@ class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         self.disconnect(silent=True)
 
 def after_event_save(sender, instance, created, **kwargs):
-    print instance.serialize()
     if created:
         emit_to_channel(instance.project, 'new_event', instance.created_by, instance.serialize())
         add_event_task(instance)

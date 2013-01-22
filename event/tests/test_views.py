@@ -207,7 +207,7 @@ class TestAfterEventSave(EventTestBase):
         self.assertEqual(self.mock_redis_publish.call_args[0][0], 'socketio_http://projecthost/project/PAM')
 
         publish_msg = self.mock_redis_publish.call_args[0][1]
-        self.assertIn('{"args": ["http://projecthost/project/PAM", "", ', publish_msg)
+        self.assertIn('{"args": ["http://projecthost/project/PAM", "http://authhost/user/testuser", ', publish_msg)
         self.assertIn('"project": "http://projecthost/project/PAM"', publish_msg)
         self.assertIn('"resource": "http://storyhost/PAM-1"', publish_msg)
         self.assertIn('"event_type": "MyEvent"', publish_msg)
@@ -223,7 +223,7 @@ class TestAfterEventSave(EventTestBase):
 
 
 class TestSocketioService(TestCase):
-    """
+    """i
     Test socketio_service (no need to inherit from EventTestBase because we'll not be calling redis)
     """
     def setUp(self):
