@@ -74,7 +74,7 @@ def add_event_task(event):
     user = request and request.user
     cookies = request and request.COOKIES
     #execute.send_task(taskname, arguments, kwargs={}, countdown, expires,...)
-    execute.send_task('tasks.tasks.calculate_release_burndown', args=[event, user, cookies])
+    execute.send_task('tasks.tasks.process_event', args=[event, user, cookies])
 
 
 class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):

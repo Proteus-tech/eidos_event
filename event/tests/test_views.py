@@ -217,7 +217,7 @@ class TestAfterEventSave(EventTestBase):
     def test_when_event_saved_task_is_sent(self):
         event = Event.objects.create(event_type='MyEvent11', resource='http://storyhost/PAM-1',
             project='http://projecthost/project/PAM', data='{}')
-        self.assertEqual(self.mock_send_task.call_args[0][0], 'tasks.tasks.calculate_release_burndown')
+        self.assertEqual(self.mock_send_task.call_args[0][0], 'tasks.tasks.process_event')
         self.assertEqual(self.mock_send_task.call_args[1]['args'], [event, self.mock_request.user, self.mock_request.COOKIES])
 
 
@@ -273,5 +273,5 @@ class TestAddEventTask(EventTestBase):
         event = Event(event_type='MyEvent11', resource='http://storyhost/PAM-1',
             project='http://projecthost/project/PAM', data='{}')
         add_event_task(event)
-        self.assertEqual(self.mock_send_task.call_args[0][0], 'tasks.tasks.calculate_release_burndown')
+        self.assertEqual(self.mock_send_task.call_args[0][0], 'tasks.tasks.process_event')
         self.assertEqual(self.mock_send_task.call_args[1]['args'], [event, self.mock_request.user, self.mock_request.COOKIES])
