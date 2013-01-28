@@ -1,8 +1,8 @@
-import simplejson
-import datetime
+from django.db.models import signals
 from django.db import models
 
 from auth_client.auth_client_utils import get_current_user_url
+from event.do_signal import after_event_save
 
 class Event(models.Model):
     event_type = models.CharField(max_length=50)
@@ -37,3 +37,5 @@ class Event(models.Model):
                 value = value.isoformat()
             event.update({name: value})
         return event
+
+signals.post_save.connect(after_event_save, sender=Event)

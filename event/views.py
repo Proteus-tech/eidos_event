@@ -53,29 +53,6 @@ from socketio.namespace import BaseNamespace
 from socketio.mixins import RoomsMixin, BroadcastMixin
 from socketio import socketio_manage
 from event.utils import redis_connection
-import simplejson
-from redis.exceptions import ConnectionError
-from celery import execute
-
-import redis
-def emit_to_channel(channel, event, *data):
-    connection_kwargs = getattr(settings, 'WEBSOCKET_REDIS_BROKER', {})
-    lower_connection_kwargs = (connection_kwargs and dict((k.lower(), v) for k,v in connection_kwargs.iteritems())) or connection_kwargs
-    r = redis.Redis(**lower_connection_kwargs)
-    args = [channel] + list(data)
-    try:
-        r.publish('socketio_%s' % channel, simplejson.dumps({'name': event, 'args': args}))
-    except ConnectionError:
-        # in case we don't have redis running
-        logger.warning('Redis does not seem to be running')
-
-def add_event_task(event):
-    request = RequestLocal.get_current_request()
-    user = request and request.user
-    cookies = request and request.COOKIES
-    #execute.send_task(taskname, arguments, kwargs={}, countdown, expires,...)
-    execute.send_task('tasks.tasks.process_event', args=[event])
-
 
 class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     def listener(self, room):
@@ -102,13 +79,6 @@ class EventUpdatesNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         # we are overriding this function to call it here
         self.kill_local_jobs()
         self.disconnect(silent=True)
-
-def after_event_save(sender, instance, created, **kwargs):
-    if created:
-        emit_to_channel(instance.project, 'new_event', instance.created_by, instance.serialize())
-        add_event_task(instance)
-
-signals.post_save.connect(after_event_save, sender=Event)
 
 def socketio_service(request):
     socketio_manage(request.environ, namespaces={'/event/updates': EventUpdatesNamespace}, request=request)
