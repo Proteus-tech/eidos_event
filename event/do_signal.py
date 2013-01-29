@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime, timedelta
 import simplejson
 import redis
 from redis.exceptions import ConnectionError
@@ -22,7 +23,7 @@ def emit_to_channel(channel, event, *data):
 
 def add_event_task(event):
     #execute.send_task(taskname, arguments, kwargs={}, countdown, expires,...)
-    execute.send_task('tasks.tasks.process_event', args=[event])
+    execute.send_task('tasks.tasks.process_event', args=[event], expires=datetime.now()+timedelta(seconds=3))
 
 def after_event_save(sender, instance, created, **kwargs):
     if created:
