@@ -19,11 +19,19 @@ def emit_to_channel(channel, event, *data):
         r.publish('socketio_%s' % channel, simplejson.dumps({'name': event, 'args': args}))
     except ConnectionError:
         # in case we don't have redis running
-        logger.warning('Redis does not seem to be running')
+        logger.error('Redis does not seem to be running')
 
 def add_event_task(event):
-    #execute.send_task(taskname, arguments, kwargs={}, countdown, expires,...)
-    execute.send_task('tasks.tasks.process_event', args=[event], expires=datetime.now()+timedelta(seconds=3))
+    try:
+        execute.send_task('tasks.tasks.process_event', args=[event], expires=datetime.now()+timedelta(seconds=3), retry_policy={
+            'max_retries': -1,
+            'interval_start': 0,
+            'interval_step': 0.01,
+            'interval_max': 0.01,
+            })
+    except ConnectionError:
+        # in case we don't have redis running
+        logger.error('Redis does not seem to be running')
 
 def after_event_save(sender, instance, created, **kwargs):
     if created:
