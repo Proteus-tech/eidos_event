@@ -16,6 +16,12 @@ class TestAddEventTask(EventTestBase):
         self.assertEqual(self.mock_send_task.call_args[1]['args'], [event])
         self.assertGreater(self.mock_send_task.call_args[1]['expires'], datetime.now()) # more than now
         self.assertLess(self.mock_send_task.call_args[1]['expires'], datetime.now()+timedelta(seconds=7)) # but 7 seconds is too much
+        self.assertDictEqual(self.mock_send_task.call_args[1]['retry_policy'], {
+            'max_retries': -1,
+            'interval_start': 0,
+            'interval_step': 0.01,
+            'interval_max': 0.01,
+        })
 
     @patch('logging.Logger.error')
     def test_add_event_task_send_task_connection_error(self, mock_logger_error):
@@ -27,5 +33,11 @@ class TestAddEventTask(EventTestBase):
         self.assertEqual(self.mock_send_task.call_args[1]['args'], [event])
         self.assertGreater(self.mock_send_task.call_args[1]['expires'], datetime.now()) # more than now
         self.assertLess(self.mock_send_task.call_args[1]['expires'], datetime.now()+timedelta(seconds=7)) # but 7 seconds is too much
+        self.assertDictEqual(self.mock_send_task.call_args[1]['retry_policy'], {
+            'max_retries': -1,
+            'interval_start': 0,
+            'interval_step': 0.01,
+            'interval_max': 0.01,
+            })
         self.assertEqual(mock_logger_error.call_args[0][0], 'Redis does not seem to be running')
 
