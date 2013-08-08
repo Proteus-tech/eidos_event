@@ -1,15 +1,17 @@
+import datetime
 from django.db.models import signals
 from django.db import models
 
 from auth_client.auth_client_utils import get_current_user_url
 from event.do_signal import after_event_save
 
+
 class Event(models.Model):
     event_type = models.CharField(max_length=50)
     resource = models.URLField(max_length=500)
     project = models.URLField(max_length=500, blank=True, null=True) # we will use this to filter push updates, allow null because older events won't have
     data = models.TextField()
-    created_on = models.DateTimeField(auto_now_add=True)
+    created_on = models.DateTimeField(default=datetime.datetime.now)
     created_by = models.URLField(max_length=500, blank=True, null=True)
 
     class Meta:
