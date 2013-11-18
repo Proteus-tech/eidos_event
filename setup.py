@@ -17,5 +17,5 @@ setup(
     install_requires=['django>=1.3.1', 'django-serene>=0.0.5', 'redis==2.6.2', 'django-celery==3.0.11', 'celery-with-redis==3.0'],
     dependency_links=['http://github.com/proteus-tech/django-logger/tarball/master#egg=django-logger-0.1'],
     package_data={'event': ['templates/*.html']},
-    packages=['event', 'event.migrations', 'event.management', 'event.management.commands'],
+    packages=['event', 'event.migrations'],
 )
