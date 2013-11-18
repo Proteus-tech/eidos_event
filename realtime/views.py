@@ -1,8 +1,5 @@
-from django.db.models import signals
 from datetime import datetime
 from django.http import HttpResponse
-from django.conf import settings
-from django_request_local.middleware import RequestLocal
 from djangorestframework import status
 from djangorestframework.views import ListModelView, View
 from djangorestframework.response import ErrorResponse
@@ -10,7 +7,7 @@ from djangorestframework.renderers import TemplateRenderer
 from auth_client.permissions import IsAuthenticated
 
 from event.models import Event as Event
-from event.resources import EventResource
+from realtime.resources import EventResource
 
 import simplejson
 

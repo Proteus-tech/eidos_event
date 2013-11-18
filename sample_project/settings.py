@@ -125,6 +125,7 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
     'sample_app',
     'event',
+    'realtime',
 
     'django_nose',
     'gunicorn',

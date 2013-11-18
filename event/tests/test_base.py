@@ -5,8 +5,10 @@ import simplejson
 from event.base import EventType, dthandler
 from event.tests.base import EventTestBase
 
+
 class SomeEventType(EventType):
     event_attributes = ['data_a', 'data_b', 'data_c']
+
 
 class TestEventType(EventTestBase):
     def test_create_event(self):
@@ -59,7 +61,6 @@ class TestEventType(EventTestBase):
         # save again
         event_instance_second_save = event_type.save_event()
         self.assertEqual(event_instance.id, event_instance_second_save.id)
-
 
     def test_save_event_with_date_datetime(self):
         data = {

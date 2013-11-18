@@ -5,11 +5,8 @@ from django.test import TestCase
 
 class EventTestBase(TestCase):
     def setUp(self):
-        self.patch_redis = patch('redis.Redis')
-        self.mock_redis = self.patch_redis.start()
-        self.mock_redis_class = Mock()
-        self.mock_redis.return_value = self.mock_redis_class
-        self.mock_redis_publish = self.mock_redis_class.publish
+        # self.patch_redis = patch('redis.Redis')
+        # self.mock_redis = self.patch_redis.start()
 
         self.patch_get_current_request = patch('django_request_local.middleware.RequestLocal.get_current_request')
         self.mock_get_current_request = self.patch_get_current_request.start()
@@ -25,6 +22,6 @@ class EventTestBase(TestCase):
         self.mock_send_task = self.patch_send_task.start()
 
     def tearDown(self):
-        self.patch_redis.stop()
+        # self.patch_redis.stop()
         self.patch_get_current_request.stop()
         self.patch_send_task.stop()

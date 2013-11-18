@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
-from mock import patch
+from mock import patch, Mock
 from redis.exceptions import ConnectionError
 from event.do_signal import add_event_task, emit_to_channel
 from event.models import Event
@@ -42,19 +42,30 @@ class TestAddEventTask(EventTestBase):
         self.assertEqual(mock_logger_error.call_args[0][0], 'Redis does not seem to be running')
 
 class TestEmitToChannel(EventTestBase):
+    def setUp(self):
+        super(TestEmitToChannel, self).setUp()
+        self.patch_redis = patch('redis.Redis')
+        self.mock_redis = self.patch_redis.start()
+        self.mock_redis_object = Mock()
+        self.mock_redis.return_value = self.mock_redis_object
+
+    def tearDown(self):
+        self.patch_redis.stop()
+        super(TestEmitToChannel, self).tearDown()
 
     def test_emit_to_channel_event_is_publised_correctly(self):
-        self.assertFalse(self.mock_redis_publish.called)
+        self.assertFalse(self.mock_redis_object.publish.called)
+        user = 'http://authhost/user/testuser'
         event = Event(event_type='MyEvent', resource='http://storyhost/PAM-1',
             project='http://projecthost/project/PAM', data='{}',
-            created_on=datetime(2013, 1, 31), created_by='http://authhost/user/testuser')
+            created_on=datetime(2013, 1, 31), created_by=user)
         emit_to_channel('http://projecthost/project/PAM', 'new_event', event.created_by, event.serialize())
         self.assertEqual(self.mock_redis.call_args[1]['host'], 'localhost')
         self.assertEqual(self.mock_redis.call_args[1]['port'], 6379)
         self.assertEqual(self.mock_redis.call_args[1]['db'], 0)
-        self.assertEqual(self.mock_redis_publish.call_args[0][0], 'socketio_http://projecthost/project/PAM')
+        self.assertEqual(self.mock_redis_object.publish.call_args[0][0], 'socketio_http://projecthost/project/PAM')
 
-        publish_msg = self.mock_redis_publish.call_args[0][1]
+        publish_msg = self.mock_redis_object.publish.call_args[0][1]
         self.assertIn('{"args": ["http://projecthost/project/PAM", "http://authhost/user/testuser", ', publish_msg)
         self.assertIn('"project": "http://projecthost/project/PAM"', publish_msg)
         self.assertIn('"resource": "http://storyhost/PAM-1"', publish_msg)
@@ -62,10 +73,10 @@ class TestEmitToChannel(EventTestBase):
         self.assertIn('"data": "{}"', publish_msg)
         self.assertIn('"name": "new_event"', publish_msg)
 
-    @patch('logging.Logger.error')
+    @patch('django_logger.BaseLogger.error')
     def test_emit_to_channel_publish_connection_error(self, mock_logger_error):
-        self.assertFalse(self.mock_redis_publish.called)
-        self.mock_redis_publish.side_effect = ConnectionError
+        self.assertFalse(self.mock_redis_object.publish.called)
+        self.mock_redis_object.publish.side_effect = ConnectionError
         event = Event(event_type='MyEvent', resource='http://storyhost/PAM-1',
             project='http://projecthost/project/PAM', data='{}',
             created_on=datetime(2013, 1, 31), created_by='http://authhost/user/testuser')
@@ -73,9 +84,9 @@ class TestEmitToChannel(EventTestBase):
         self.assertEqual(self.mock_redis.call_args[1]['host'], 'localhost')
         self.assertEqual(self.mock_redis.call_args[1]['port'], 6379)
         self.assertEqual(self.mock_redis.call_args[1]['db'], 0)
-        self.assertEqual(self.mock_redis_publish.call_args[0][0], 'socketio_http://projecthost/project/PAM')
+        self.assertEqual(self.mock_redis_object.publish.call_args[0][0], 'socketio_http://projecthost/project/PAM')
 
-        publish_msg = self.mock_redis_publish.call_args[0][1]
+        publish_msg = self.mock_redis_object.publish.call_args[0][1]
         self.assertIn('{"args": ["http://projecthost/project/PAM", "http://authhost/user/testuser", ', publish_msg)
         self.assertIn('"project": "http://projecthost/project/PAM"', publish_msg)
         self.assertIn('"resource": "http://storyhost/PAM-1"', publish_msg)
@@ -83,5 +94,5 @@ class TestEmitToChannel(EventTestBase):
         self.assertIn('"data": "{}"', publish_msg)
         self.assertIn('"name": "new_event"', publish_msg)
 
-        self.assertEqual(mock_logger_error.call_args[0][0], 'Redis does not seem to be running')
+        mock_logger_error.assert_called_once_with('Redis does not seem to be running')
 
