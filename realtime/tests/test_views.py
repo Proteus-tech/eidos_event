@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime, timedelta
-
-import simplejson
 from mock import patch, Mock
-from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.test import TestCase
 from django.test.client import RequestFactory
@@ -11,21 +7,6 @@ from django.test.client import RequestFactory
 from event.models import Event
 from realtime.views import socketio_service, EventUpdatesNamespace
 from event.tests.base import EventTestBase
-from sample_app.event_types import StoryAdded, StoryCompleted, StoryEstimateChanged, StoryStatusChanged
-
-class TestEventListView(EventTestBase):
-    def setUp(self):
-        super(TestEventListView, self).setUp()
-        self.story_list = "[\"http://storyhost/story/TST-1\"]"
-        self.resource = "http://storyhost/story/TST-1"
-        self.project='http://projecthost/project/TST'
-        self.now = datetime.now()
-        self.added = StoryAdded(resource=self.resource, project=self.project, data={
-            'estimate': None,
-        })
-        self.added_event = self.added.save_event()
-        self.added_event.created_on = self.now
-        self.added_event.save()
 
 
 class TestEventUpdatesNamespace(TestCase):
