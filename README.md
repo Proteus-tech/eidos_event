@@ -26,5 +26,5 @@ Once you have libevent, you can install gevent with pip:
 
 >>> $ pip install gevent
 
-For Windows, you don't need libevent, but you would need to use installer for the libraries. You can find both the gevent library and greenlet library from http://www.lfd.uci.edu/~gohlke/pythonlibs/.
+For Windows, you don't need libevent, but you would need to use installer for the libraries. You can find both the gevent library library from http://www.lfd.uci.edu/~gohlke/pythonlibs/.
 Install them and copy the library over into virtual environment
