@@ -32,6 +32,7 @@ pip-log.txt
 # IDE files #
 #############
 .idea
+*.swp
 
 # Database file #
 #################
@@ -39,6 +40,7 @@ pip-log.txt
 *.log
 *.sql
 *.sqlite
+*.db
 
 # Cache #
 #########
