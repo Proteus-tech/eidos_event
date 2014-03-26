@@ -215,3 +215,52 @@ class TestEventListView(EventTestBase):
         self.assertEqual(content[1]['event_type'], 'StoryEstimateChanged')
         self.assertEqual(content[2]['event_type'], 'StoryStatusChanged')
         self.assertEqual(content[3]['event_type'], 'StoryCompleted')
+
+    def test_get_event_by_project_and_event(self):
+        new_project = "http://newproject_yok"
+
+        sa = StoryAdded(resource=self.resource, project=new_project, data={
+            'estimate': None,
+        })
+        sa_event = sa.save_event()
+        sa_event.created_on = self.now
+        sa_event.save()
+
+        e3 = StoryEstimateChanged(resource=self.resource, project=new_project, data={
+            'old_estimate': None,
+            'new_estimate': 3,
+        })
+        e3 = e3.save_event()
+        e3.created_on = self.now + timedelta(days=1)
+        e3.save()
+
+        sc = StoryStatusChanged(resource=self.resource, project=new_project, data={
+            'from_status': 'Development In Progress',
+            'to_status': 'Ready for Testing',
+        })
+        sc_event = sc.save_event()
+        sc_event.created_on = self.now + timedelta(days=3)
+        sc_event.save()
+
+        sc = StoryCompleted(resource=self.resource, project=new_project)
+        sc_event = sc.save_event()
+        sc_event.created_on = self.now + timedelta(days=4)
+        sc_event.save()
+
+        response = self.client.get('/events', {
+            'project': new_project,
+            'event_type': 'StoryAdded'
+        })
+        self.assertEqual(response.status_code, 200)
+        content = simplejson.loads(response.content)
+        self.assertEqual(len(content), 1)
+        self.assertEqual(content[0]['event_type'], 'StoryAdded')
+
+        response = self.client.get('/events', {
+            'project': new_project,
+            'event_type': 'StoryStatusChanged'
+        })
+        self.assertEqual(response.status_code, 200)
+        content = simplejson.loads(response.content)
+        self.assertEqual(len(content), 1)
+        self.assertEqual(content[0]['event_type'], 'StoryStatusChanged')
