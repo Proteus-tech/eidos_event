@@ -145,3 +145,31 @@ class TestEventListView(EventTestBase):
         self.assertEqual(content[4]['links']['self']['href'], 'http://testserver/event/%s' % self.to_ready_for_testing_event.id)
         self.assertEqual(content[5]['links']['self']['href'], 'http://testserver/event/%s' % self.to_complete_event.id)
 
+    def test_get_event_by_event_type_StoryCompleted(self):
+        response = self.client.get('/events', {
+            'event_type': 'StoryCompleted'
+        })
+        self.assertEqual(response.status_code, 200)
+        content = simplejson.loads(response.content)
+        self.assertEqual(len(content), 1)
+        self.assertEqual(content[0]['event_type'], 'StoryCompleted')
+
+    def test_get_event_by_event_type_StoryStatusChanged(self):
+        response = self.client.get('/events', {
+            'event_type': 'StoryStatusChanged'
+        })
+        self.assertEqual(response.status_code, 200)
+        content = simplejson.loads(response.content)
+        self.assertEqual(len(content), 2)
+        self.assertEqual(content[0]['event_type'], 'StoryStatusChanged')
+        self.assertEqual(content[1]['event_type'], 'StoryStatusChanged')
+
+    def test_get_event_by_event_type_StoryEstimateChanged(self):
+        response = self.client.get('/events', {
+            'event_type': 'StoryEstimateChanged'
+        })
+        self.assertEqual(response.status_code, 200)
+        content = simplejson.loads(response.content)
+        self.assertEqual(len(content), 2)
+        self.assertEqual(content[0]['event_type'], 'StoryEstimateChanged')
+        self.assertEqual(content[1]['event_type'], 'StoryEstimateChanged')
