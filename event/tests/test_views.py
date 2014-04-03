@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 from django.contrib.auth.models import User
 import simplejson
+from event.models import Event
 from event.tests.base import EventTestBase
 from sample_app.event_types import StoryAdded, StoryCompleted, StoryStatusChanged, StoryEstimateChanged
 
@@ -264,3 +265,127 @@ class TestEventListView(EventTestBase):
         content = simplejson.loads(response.content)
         self.assertEqual(len(content), 1)
         self.assertEqual(content[0]['event_type'], 'StoryStatusChanged')
+
+
+class TestCreateEventListView(EventTestBase):
+    def setUp(self):
+        super(TestCreateEventListView, self).setUp()
+        self.resource = "http://storyhost/story/TST-1"
+        self.project='http://projecthost/project/TST'
+        self.now = datetime.now()
+
+
+        User.objects.create_user(username='testuser', password='testuser', email='')
+        self.client.login(username='testuser', password='testuser')
+
+    def test_post_event_list_with_json(self):
+        data = [{
+            "resource": "http://127.0.0.1:8002/story/TST-103",
+            "event_type": "StoryEstimateChanged",
+            "created_on": "2014-03-24T01:02:27.399465",
+            "data": {"old_estimate": None, "new_estimate": 5},
+            "project": "http://project_uri"
+        },
+        {
+            "resource": "http://127.0.0.1:8002/story/TST-106",
+            "event_type": "BacklogStoryAdded",
+            "created_on": "1250-11-24T01:02:27.399465",
+            "data": {"estimate": 8},
+            "project": "http://project_uri"
+        }]
+        dumpds_data = simplejson.dumps(data)
+        Event.objects.all().delete()
+
+        response = self.client.post('/events', data=dumpds_data, content_type='application/json')
+
+        self.assertEqual(response.status_code, 200)
+
+        events = Event.objects.all().order_by('created_on')
+
+        event = events[0]
+        self.assertEqual(event.resource, data[1]['resource'])
+        self.assertEqual(event.event_type, data[1]['event_type'])
+        self.assertEqual(event.data, "{'estimate': 8}")
+        self.assertEqual(event.project, data[1]['project'])
+        self.assertEqual(str(event.created_on), '1250-11-24 07:02:27.399465+00:00')
+
+        event = events[1]
+        self.assertEqual(event.resource, data[0]['resource'])
+        self.assertEqual(event.event_type, data[0]['event_type'])
+        self.assertEqual(event.data, "{'old_estimate': None, 'new_estimate': 5}")
+        self.assertEqual(event.project, data[0]['project'])
+        self.assertEqual(str(event.created_on), '2014-03-24 06:02:27.399465+00:00')
+
+    def test_post_event_list_without_json(self):
+        data = []
+        dumpds_data = simplejson.dumps(data)
+        Event.objects.all().delete()
+
+        response = self.client.post('/events', data=dumpds_data, content_type='application/json')
+
+        self.assertEqual(response.status_code, 200)
+
+        event_amount = Event.objects.all().count()
+        self.assertEqual(event_amount, 0)
+
+    def test_post_event_list_with_json_but_wrong_format_date(self):
+        data = [{
+            "resource": "http://127.0.0.1:8002/story/TST-103",
+            "event_type": "StoryEstimateChanged",
+            "created_on": "10-20-2012T01:02:27.399465",
+            "data": {"old_estimate": None, "new_estimate": 5},
+            "project": "http://project_uri"
+        },
+        {
+            "resource": "http://127.0.0.1:8002/story/TST-106",
+            "event_type": "BacklogStoryAdded",
+            "created_on": "1250-11-24T01:02:27.399465",
+            "data": {"estimate": 8},
+            "project": "http://project_uri"
+        }]
+        dumpds_data = simplejson.dumps(data)
+        Event.objects.all().delete()
+
+        response = self.client.post('/events', data=dumpds_data, content_type='application/json')
+
+        self.assertEqual(response.status_code, 400)
+
+        count = Event.objects.all().count()
+        self.assertEqual(count, 0)
+
+    def test_post_event_list_with_json_but_missing_data(self):
+        data = [{
+            "resource": "http://127.0.0.1:8002/story/TST-103",
+            "event_type": "StoryEstimateChanged",
+            "created_on": "2014-03-24T01:02:27.399465",
+            "project": "http://project_uri"
+        },
+        {
+            "resource": "http://127.0.0.1:8002/story/TST-106",
+            "event_type": "BacklogStoryAdded",
+            "created_on": "1250-11-24T01:02:27.399465",
+            "data": {"estimate": 8},
+            "project": "http://project_uri"
+        }]
+        dumpds_data = simplejson.dumps(data)
+        Event.objects.all().delete()
+
+        response = self.client.post('/events', data=dumpds_data, content_type='application/json')
+
+        self.assertEqual(response.status_code, 200)
+
+        events = Event.objects.all().order_by('created_on')
+
+        event = events[0]
+        self.assertEqual(event.resource, data[1]['resource'])
+        self.assertEqual(event.event_type, data[1]['event_type'])
+        self.assertEqual(event.data, "{'estimate': 8}")
+        self.assertEqual(event.project, data[1]['project'])
+        self.assertEqual(str(event.created_on), '1250-11-24 07:02:27.399465+00:00')
+
+        event = events[1]
+        self.assertEqual(event.resource, data[0]['resource'])
+        self.assertEqual(event.event_type, data[0]['event_type'])
+        self.assertEqual(event.data, "")
+        self.assertEqual(event.project, data[0]['project'])
+        self.assertEqual(str(event.created_on), '2014-03-24 06:02:27.399465+00:00')

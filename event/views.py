@@ -3,12 +3,13 @@ from datetime import datetime
 from djangorestframework import status
 from djangorestframework.permissions import IsAuthenticated
 from djangorestframework.response import ErrorResponse
-from djangorestframework.views import ListModelView
+from djangorestframework.views import ListOrCreateModelView
 import simplejson
+from event.models import Event
 from event.resources import EventResource
 
 
-class EventListView(ListModelView):
+class EventListView(ListOrCreateModelView):
     permissions = (IsAuthenticated,)
     resource = EventResource
 
@@ -40,3 +41,18 @@ class EventListView(ListModelView):
         filter_kwargs = self.get_filter_kwargs(request, **kwargs)
         return super(EventListView, self).get(request, *args, **filter_kwargs)
 
+    def post(self, request, *args, **kwargs):
+        data = self.DATA
+        wait_for_save = []
+        result = []
+        for event in data:
+            try:
+                event['created_on'] = datetime.strptime(event['created_on'], '%Y-%m-%dT%H:%M:%S.%f')
+            except ValueError:
+                raise ErrorResponse(status.HTTP_400_BAD_REQUEST, "event error:: %s" % event['resource'])
+            wait_for_save.append(Event(**event))
+
+        for event in wait_for_save:
+            event.save()
+            result.append(event)
+        return result
