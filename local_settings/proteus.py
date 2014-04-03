@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from sample_project.settings import *
+from eidos_event.settings import *
 
 DEBUG=False
 

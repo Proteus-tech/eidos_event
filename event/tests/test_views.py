@@ -144,3 +144,123 @@ class TestEventListView(EventTestBase):
         self.assertEqual(content[3]['links']['self']['href'], 'http://testserver/event/%s' % self.estimated_5_event.id)
         self.assertEqual(content[4]['links']['self']['href'], 'http://testserver/event/%s' % self.to_ready_for_testing_event.id)
         self.assertEqual(content[5]['links']['self']['href'], 'http://testserver/event/%s' % self.to_complete_event.id)
+
+    def test_get_event_by_event_type_StoryCompleted(self):
+        response = self.client.get('/events', {
+            'event_type': 'StoryCompleted'
+        })
+        self.assertEqual(response.status_code, 200)
+        content = simplejson.loads(response.content)
+        self.assertEqual(len(content), 1)
+        self.assertEqual(content[0]['event_type'], 'StoryCompleted')
+
+    def test_get_event_by_event_type_StoryStatusChanged(self):
+        response = self.client.get('/events', {
+            'event_type': 'StoryStatusChanged'
+        })
+        self.assertEqual(response.status_code, 200)
+        content = simplejson.loads(response.content)
+        self.assertEqual(len(content), 2)
+        self.assertEqual(content[0]['event_type'], 'StoryStatusChanged')
+        self.assertEqual(content[1]['event_type'], 'StoryStatusChanged')
+
+    def test_get_event_by_event_type_StoryEstimateChanged(self):
+        response = self.client.get('/events', {
+            'event_type': 'StoryEstimateChanged'
+        })
+        self.assertEqual(response.status_code, 200)
+        content = simplejson.loads(response.content)
+        self.assertEqual(len(content), 2)
+        self.assertEqual(content[0]['event_type'], 'StoryEstimateChanged')
+        self.assertEqual(content[1]['event_type'], 'StoryEstimateChanged')
+
+    def test_get_event_by_project(self):
+        new_project = "http://newproject_yok"
+
+        sa = StoryAdded(resource=self.resource, project=new_project, data={
+            'estimate': None,
+        })
+        sa_event = sa.save_event()
+        sa_event.created_on = self.now
+        sa_event.save()
+
+        e3 = StoryEstimateChanged(resource=self.resource, project=new_project, data={
+            'old_estimate': None,
+            'new_estimate': 3,
+        })
+        e3 = e3.save_event()
+        e3.created_on = self.now + timedelta(days=1)
+        e3.save()
+
+        sc = StoryStatusChanged(resource=self.resource, project=new_project, data={
+            'from_status': 'Development In Progress',
+            'to_status': 'Ready for Testing',
+        })
+        sc_event = sc.save_event()
+        sc_event.created_on = self.now + timedelta(days=3)
+        sc_event.save()
+
+        sc = StoryCompleted(resource=self.resource, project=new_project)
+        sc_event = sc.save_event()
+        sc_event.created_on = self.now + timedelta(days=4)
+        sc_event.save()
+
+        response = self.client.get('/events', {
+            'project': new_project
+        })
+        self.assertEqual(response.status_code, 200)
+        content = simplejson.loads(response.content)
+        self.assertEqual(len(content), 4)
+        self.assertEqual(content[0]['event_type'], 'StoryAdded')
+        self.assertEqual(content[1]['event_type'], 'StoryEstimateChanged')
+        self.assertEqual(content[2]['event_type'], 'StoryStatusChanged')
+        self.assertEqual(content[3]['event_type'], 'StoryCompleted')
+
+    def test_get_event_by_project_and_event(self):
+        new_project = "http://newproject_yok"
+
+        sa = StoryAdded(resource=self.resource, project=new_project, data={
+            'estimate': None,
+        })
+        sa_event = sa.save_event()
+        sa_event.created_on = self.now
+        sa_event.save()
+
+        e3 = StoryEstimateChanged(resource=self.resource, project=new_project, data={
+            'old_estimate': None,
+            'new_estimate': 3,
+        })
+        e3 = e3.save_event()
+        e3.created_on = self.now + timedelta(days=1)
+        e3.save()
+
+        sc = StoryStatusChanged(resource=self.resource, project=new_project, data={
+            'from_status': 'Development In Progress',
+            'to_status': 'Ready for Testing',
+        })
+        sc_event = sc.save_event()
+        sc_event.created_on = self.now + timedelta(days=3)
+        sc_event.save()
+
+        sc = StoryCompleted(resource=self.resource, project=new_project)
+        sc_event = sc.save_event()
+        sc_event.created_on = self.now + timedelta(days=4)
+        sc_event.save()
+
+        response = self.client.get('/events', {
+            'project': new_project,
+            'event_type': 'StoryAdded'
+        })
+        self.assertEqual(response.status_code, 200)
+        content = simplejson.loads(response.content)
+        self.assertEqual(len(content), 1)
+        self.assertEqual(content[0]['event_type'], 'StoryAdded')
+
+        response = self.client.get('/events', {
+            'project': new_project,
+            'event_type': 'StoryStatusChanged'
+        })
+        self.assertEqual(response.status_code, 200)
+        content = simplejson.loads(response.content)
+        self.assertEqual(len(content), 1)
+        self.assertEqual(content[0]['event_type'], 'StoryStatusChanged')

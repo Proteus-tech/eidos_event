@@ -101,10 +101,10 @@ MIDDLEWARE_CLASSES = (
     'django_request_local.middleware.RequestLocal',
 )
 
-ROOT_URLCONF = 'sample_project.urls'
+ROOT_URLCONF = 'eidos_event.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'sample_project.wsgi.application'
+WSGI_APPLICATION = 'eidos_event.wsgi.application'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
